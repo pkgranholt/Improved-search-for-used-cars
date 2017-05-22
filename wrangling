@@ -1,20 +1,20 @@
 ### setting working directory and loading libraries ###
-setwd("/Users/pkg/Springboard/Capstone project")
+setwd('/Users/pkg/Springboard/Capstone project')
 library(data.table)
 library(dplyr)
 library(tidyr)
 
 ### autos data set ###
 ## importing data ##
-auto <- fread(input = "autos.csv")
+auto <- fread(input = 'autos.csv')
 
 ## cleaning the data ##
 # what type of sellers are there, and how many of each are there?
 table(auto$seller)
-print(auto[auto$seller == "gewerblich"])
+print(auto[auto$seller == 'gewerblich'])
 # we only want private sellers, so let's clean those few
 # that are commercial, and remove the column after that
-auto <- auto[auto$seller == "privat"]
+auto <- auto[auto$seller == 'privat']
 auto$seller <- NULL
 
 # what about pictures?
@@ -24,7 +24,7 @@ auto$nrOfPictures <- NULL
 
 # people looking for cars (eg. not cars that are for sale)
 # needs to be taken out of the data set
-auto <- auto[auto$offerType == "Angebot"]
+auto <- auto[auto$offerType == 'Angebot']
 auto$offerType <- NULL
 
 # see if cars with very high/low price are actual advertisements
@@ -37,11 +37,11 @@ print(auto[auto$price > 500000])
 auto <- auto[price < 500000 & price > 100]
 
 # note that the dataset has not included whether prices are stated
-# as "VB" which stands for Verhandlungsbasis (negotiable) or not,
+# as 'VB' which stands for Verhandlungsbasis (negotiable) or not,
 # which could have been interesting as not all advertisements
-# include a price with "VB"
+# include a price with 'VB'
 
-# the variable "abtest" seems to be linked to some sort av A/B-testing
+# the variable 'abtest' seems to be linked to some sort av A/B-testing
 # that may or may not be linked to the website rather than the
 # advertisements. We'll keep this column for now.
 
@@ -59,46 +59,54 @@ table(is.na(auto$model))
 
 # the production year for the reliability data is between 2002 and 2015
 # therefore cars that are newer or older than this are removed
-# we'll assume that registration year from "auto" and
-# production year from "rel" are the same, though this may not necessarily be true
+# we'll assume that registration year from 'auto' and
+# production year from 'rel' are the same, though this may not necessarily be true
 auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
 
 ### reliability data set ###
 ## importing data ##
-rel <- fread("reliability.csv")
+rel <- fread('reliability.csv')
 
 ## cleaning the data ##
 # remove strings and change fault_rate and mileage into numbers
-rel$mileage <- sub(" km", "", rel$mileage)
-rel$mileage <- sub(" "  , "", rel$mileage)
+rel$mileage <- sub(' km', '', rel$mileage)
+rel$mileage <- sub(' '  , '', rel$mileage)
 rel$mileage <-      as.integer(rel$mileage)
 
-rel$fault_rate <- sub("%", "", rel$fault_rate)
+rel$fault_rate <- sub('%', '', rel$fault_rate)
 rel$fault_rate <-    as.numeric(rel$fault_rate)
 
 # separate car_make_model into car brand and car model
 rel <- rel %>%
-  separate(car_make_model, c("car_brand", "car_model"), extra = "merge")
+  separate(car_make_model, c('car_brand', 'car_model'), extra = 'merge')
 
 # substitue the special letters for regular letters
-rel$car_brand <- sub("Š", "s", rel$car_brand)
-rel$car_brand <- sub("ë", "e", rel$car_brand)
-rel$car_model <- sub("é", "e", rel$car_model)
-rel$car_model <- sub("ó", "o", rel$car_model)
+rel$car_brand <- sub('Š', 's', rel$car_brand)
+rel$car_brand <- sub('ë', 'e', rel$car_brand)
+rel$car_model <- sub('é', 'e', rel$car_model)
+rel$car_model <- sub('ó', 'o', rel$car_model)
 
 # set all characters to lower case
 rel$car_brand <- tolower(rel$car_brand)
 rel$car_model <- tolower(rel$car_model)
 
-# fixing the brand names that have two names or that needs fixing
+# fixing the brand names that have two names or that needs fixing (mercedes benz, alfa romeo and bmw mini)
+rel$car_brand <- ifelse(rel$car_brand == 'mercedes', 'mercedes benz', rel$car_brand)
+rel$car_model <- ifelse(rel$car_brand == 'mercedes benz', sub('benz ', '', rel$car_model), rel$car_model)
 
+rel$car_brand <- ifelse(rel$car_brand == 'alfa', 'alfa romeo', rel$car_brand)
+rel$car_model <- ifelse(rel$car_brand == 'alfa romeo', sub('romeo ', '', rel$car_model), rel$car_model)
 
+rel$car_model <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'mini', 'cooper', rel$car_model)
+rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'cooper', 'mini', rel$car_brand)
+rel$car_model <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'mini countryman', 'countryman', rel$car_model)
+rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'countryman', 'mini', rel$car_brand)
 
 
 
 ### crash test data set ###
 ## importing data ##
-crash <- fread("crash.csv")
+crash <- fread('crash.csv')
 
 ## transforming the data ##
 # the data set only has useful information in every four rows
