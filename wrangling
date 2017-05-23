@@ -102,6 +102,19 @@ rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'cooper', 'min
 rel$car_model <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'mini countryman', 'countryman', rel$car_model)
 rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'countryman', 'mini', rel$car_brand)
 
+# creating a variable for the age of the car based on report year and production year
+rel$car_age <- rel$report_year - rel$car_prod_y
+
+# creating means for report that overlap (see the read.me file for the reason why)
+rel$full_name <- paste(rel$car_brand, rel$car_model, sep = " ")
+
+rel$fr14_1716 <- as.integer(ifelse((rel$car_prod_y == 2014 & rel$report_year == 2017) |
+                                   (rel$car_prod_y == 2014 & rel$report_year == 2016), TRUE, FALSE))
+
+rel$mean_fr14_1716 <- rel$fr14_1716 %>%
+                        select(fr14_1716, contains(1)) %>% 
+                        group_by(full_name) %>% 
+                        mutate(average=mean(fault_rate))
 
 
 ### crash test data set ###
