@@ -1,6 +1,6 @@
 # Capstone project milestone report
 
-## * Introduction
+## Introduction
 
 When I last bought a used car, there were many choices that had to be made - what brand, how expensive, what type of car, and so on. What was much more difficult to find however, was how safe and reliable these cars were. I managed to find some reports for reliability ratings, and crash test safety ratings, but it took a lot of time comparing and ranking the different options. All in all it was quite time consuming.
 
@@ -10,7 +10,7 @@ The primary goal will be to make both crash test ratings and reliability ratings
 
 In addition, I would like to see if there are viable methods for finding cars that are close to your search, even if there are none that match your exact search.
 
-## * The data sets and wrangling
+## The data sets and wrangling
 There are three sources for this project:  
 
 1. [Ebay-Klenanzeigen](https://www.kaggle.com/orgesleka/used-cars-database) is a scraping of the German version of Ebay with about 371,000 cars for sale. This will be used as the basis for the search recommendations.
@@ -35,7 +35,7 @@ To fix this, I've averaged the years that fall in two reports (for instance a ca
 
 Data wrangling-wise, the best way of aggregating this data was to create columns with dplyr that are easily able to both identify where there are enough data to create the means, and to actually create them as a separate variable. Then the variable was inserted into the "pure" reliability data as a proxy to break up the two consecutive years with identical data.
 
-## * About the data fields
+## About the data fields
 The data sets all have information on car names. Only the biggest one have separate fields for car brands and models. Therefore this needs to be created for the other two data sets. There are a few naming conventions that need to be made similar, but apart from that, it's a simple enough process.
 
 In addition, the difference in degree of aggregation means that it is vital to create a common level of detail for the data sets. For instance, what is described as a "Mercedes Benz E-Class Coupe" may merely be called "Mercedes E-Class" in another data set. The "coupe"-detail is lost when we reduce the data sets to the smallest common denominators.
@@ -56,8 +56,8 @@ Secondly, the listing-data set is almost cut in half after cleaning, most of whi
 
 I think it's also important to recognize that this project will only help you identify which cars fall within which safety/reliability-rating, it will not help you decide on which car is right for you. Purchasing a car is, I believe, for most at least a partially emotional action. If you are like me, and crave more information pertaining to the cars listed for sale, then this project may be of help. If you simply want to find a car you will like, you may be better helped by looking elsewhere.
 
-## * Preliminary exploration and initial findings
+## Preliminary exploration and initial findings
 
-## * The way forward
+## The way forward
 
 In the coming weeks I aim to create unified search-parameters for the search functionality, and test it thoroughly. My biggest concern is how wide the actual search functionality will be - will it "feel" like an actual search engine, or is it too limited in scope?
