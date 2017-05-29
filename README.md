@@ -48,7 +48,7 @@ All the data sets are in German, and a few issues pertaining to translations and
 
 I think it's also worth noting that the crash test criteria has changed a lot over the years. Anecdotally, I would compare a five-star rating in 2002 to a three-star rating in 2017. This is due to the ever-evolving new requirements for getting a top score, which includes new technology like brake assistance or lane-change warnings. I've intentionally kept the original ratings, as I believe that is more intuitive, but it could be interesting to include devaluations of the older ratings in a future project.
 
-## * Limitations
+## Limitations
 
 Having to rely on the smallest common denominator from three different data sets means there have to be some concessions. For one, the brands and models are possible to identify for the most part, but features are not. As one can imagine, the same car with different features may behave differently in both crash tests and reliability. A top-specced model typically has extra features, which may include some safety features. Therefore, the ratings should be thought of as a sort of "mean" for each of the car models within years they are tested for.
 
