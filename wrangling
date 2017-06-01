@@ -102,15 +102,79 @@ rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'cooper', 'min
 rel$car_model <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'mini countryman', 'countryman', rel$car_model)
 rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'countryman', 'mini', rel$car_brand)
 
+# Reshaping fault rate to facilitate further manipulation
+rel_fr <- rel %>% 
+  spread(report_year, fault_rate) %>%
+  select(2:3,5:10) %>% 
+  gather(report_year, fault_rate, 4:8, na.rm = TRUE) %>%
+  distinct(car_brand, car_model, car_prod_y, report_year, .keep_all = TRUE) %>%
+  spread(report_year, fault_rate)
+
+even_fr <- (rel_fr$car_prod_y == '2002' | rel_fr$car_prod_y == '2004' | rel_fr$car_prod_y == '2006' |
+            rel_fr$car_prod_y == '2008' | rel_fr$car_prod_y == '2010' | rel_fr$car_prod_y == '2014')
+
+# creating means for reports that overlap (see the read.me file for the reason why)
+rel_fr$mean1617 <- rowMeans(rel_fr[,c("2016", "2017")], na.rm = TRUE)
+rel_fr$'2016'[even_fr] <- rel_fr$mean1617[even_fr]
+rel_fr$'2017'[even_fr] <- rel_fr$mean1617[even_fr]
+
+rel_fr$mean1516 <- rowMeans(rel_fr[,c("2015", "2016")], na.rm = TRUE)
+rel_fr$'2015'[!even_fr] <- rel_fr$mean1516[!even_fr]
+rel_fr$'2016'[!even_fr] <- rel_fr$mean1516[!even_fr]
+
+rel_fr$mean1415 <- rowMeans(rel_fr[,c("2014", "2015")], na.rm = TRUE)
+rel_fr$'2014'[even_fr] <- rel_fr$mean1415[even_fr]
+rel_fr$'2015'[even_fr] <- rel_fr$mean1415[even_fr]
+
+rel_fr$mean1314 <- rowMeans(rel_fr[,c("2013", "2014")], na.rm = TRUE)
+rel_fr$'2013'[!even_fr] <- rel_fr$mean1314[!even_fr]
+rel_fr$'2014'[!even_fr] <- rel_fr$mean1314[!even_fr]
+
+rel_fr <- rel_fr %>%
+  select(1:8) %>% 
+  gather(report_year, fault_rate, 4:8, na.rm = TRUE)
+
+
+# Reshaping mileage data to facilitate further manipulation
+rel_mil <- rel %>% 
+  spread(report_year, mileage) %>%
+  select(2:3,5:10) %>% 
+  gather(report_year, mileage, 4:8, na.rm = TRUE) %>%
+  distinct(car_brand, car_model, car_prod_y, report_year, .keep_all = TRUE) %>%
+  spread(report_year, mileage)
+
+even_mil <- (rel_mil$car_prod_y == '2002' | rel_mil$car_prod_y == '2004' | rel_mil$car_prod_y == '2006' |
+             rel_mil$car_prod_y == '2008' | rel_mil$car_prod_y == '2010' | rel_mil$car_prod_y == '2014')
+
+# creating means for reports that overlap (see the read.me file for the reason why)
+rel_mil$mean1617 <- rowMeans(rel_mil[,c("2016", "2017")], na.rm = TRUE)
+rel_mil$'2016'[even_mil] <- rel_mil$mean1617[even_mil]
+rel_mil$'2017'[even_mil] <- rel_mil$mean1617[even_mil]
+
+rel_mil$mean1516 <- rowMeans(rel_mil[,c("2015", "2016")], na.rm = TRUE)
+rel_mil$'2015'[!even_mil] <- rel_mil$mean1516[!even_mil]
+rel_mil$'2016'[!even_mil] <- rel_mil$mean1516[!even_mil]
+
+rel_mil$mean1415 <- rowMeans(rel_mil[,c("2014", "2015")], na.rm = TRUE)
+rel_mil$'2014'[even_mil] <- rel_mil$mean1415[even_mil]
+rel_mil$'2015'[even_mil] <- rel_mil$mean1415[even_mil]
+
+rel_mil$mean1314 <- rowMeans(rel_mil[,c("2013", "2014")], na.rm = TRUE)
+rel_mil$'2013'[!even_mil] <- rel_mil$mean1314[!even_mil]
+rel_mil$'2014'[!even_mil] <- rel_mil$mean1314[!even_mil]
+
+rel_mil <- rel_mil %>%
+  select(1:8) %>% 
+  gather(report_year, mileage, 4:8, na.rm = TRUE)
+
+#combining the data frames, and removing the temporary data frames and vectors
+rel <- cbind(rel_fr, mileage = rel_mil$mileage)
+rm(rel_fr, rel_mil, even_fr, even_mil)
+
 # creating a variable for the age of the car based on report year and production year
+rel$report_year <- as.numeric(rel$report_year)
 rel$car_age <- rel$report_year - rel$car_prod_y
 
-# creating means for report that overlap (see the read.me file for the reason why)
-rel$full_name <- paste(rel$car_brand, rel$car_model, sep = " ")
-
-# Reshaping the data to facilitate further manipulation
-rel <- spread(rel, report_year, fault_rate)
-rel <- spread(rel, car_prod_y)
 
 
 ### crash test data set ###
