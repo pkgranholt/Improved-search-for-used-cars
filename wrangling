@@ -4,6 +4,10 @@ library(data.table)
 library(dplyr)
 library(tidyr)
 
+
+
+
+
 ### autos data set ###
 ## importing data ##
 auto <- fread(input = 'autos.csv')
@@ -62,6 +66,10 @@ table(is.na(auto$model))
 # we'll assume that registration year from 'auto' and
 # production year from 'rel' are the same, though this may not necessarily be true
 auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
+
+
+
+
 
 ### reliability data set ###
 ## importing data ##
@@ -134,7 +142,6 @@ rel_fr <- rel_fr %>%
   select(1:8) %>% 
   gather(report_year, fault_rate, 4:8, na.rm = TRUE)
 
-
 # Reshaping mileage data to facilitate further manipulation
 rel_mil <- rel %>% 
   spread(report_year, mileage) %>%
@@ -177,6 +184,8 @@ rel$car_age <- rel$report_year - rel$car_prod_y
 
 
 
+
+
 ### crash test data set ###
 ## importing data ##
 crash <- fread('crash.csv')
@@ -184,9 +193,3 @@ crash <- fread('crash.csv')
 ## transforming the data ##
 # the data set only has useful information in every four rows
 crash <- crash[seq(1, nrow(crash), 4),]
-
-
-
-
-
-
