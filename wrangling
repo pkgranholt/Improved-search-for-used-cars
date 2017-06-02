@@ -193,3 +193,37 @@ crash <- fread('crash.csv')
 ## transforming the data ##
 # the data set only has useful information in every four rows
 crash <- crash[seq(1, nrow(crash), 4),]
+
+# separate brand_model into separate columns
+crash <- crash %>%
+  separate(brand_model, c('brand', 'model'), extra = 'merge')
+
+# substitue the special letters for regular letters
+crash$brand <- sub('ò', 'o', crash$brand)
+crash$model <- sub('é', 'e', crash$model)
+
+# set all characters to lower case
+crash$brand <- tolower(crash$brand)
+crash$model <- tolower(crash$model)
+
+# fixing the brand names that have two names or that needs fixing
+crash$model <- sub('benz citan kombi', 'citan kombi', crash$model)
+crash$brand <- sub('vw', 'volkswagen', crash$brand)
+crash$brand <- sub('alfa', 'alfa romeo', crash$brand)
+
+crash$model <- ifelse(crash$brand == 'alfa romeo', sub('romeo ', '', crash$model), crash$model)
+
+crash$model <- ifelse(crash$brand == 'mercedes', sub('-klasse', '', crash$model), crash$model)
+
+crash$brand <- ifelse(crash$brand == 'land', 'land rover', crash$brand)
+crash$model <- ifelse(crash$brand == 'land rover', sub('rover ', '', crash$model), crash$model)
+
+crash$brand <- ifelse(crash$brand == 'range', 'land rover', crash$brand)
+crash$model <- ifelse(crash$brand == 'land rover', sub('rover', 'range rover', crash$model), crash$model)
+
+crash$model <- ifelse(crash$brand == 'bmw' & crash$model == 'mini', 'mini', crash$model)
+crash$brand <- ifelse(crash$model == 'mini', 'mini', crash$brand)
+crash$model <- ifelse(crash$brand == 'mini' & crash$model == 'mini', '', crash$model)
+
+crash$model <- ifelse(crash$brand == 'bmw' & crash$model == 'mini cooper', 'cooper', crash$model)
+crash$brand <- ifelse(crash$model == 'cooper', 'mini', crash$brand)
