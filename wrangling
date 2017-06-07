@@ -47,10 +47,10 @@ auto <- auto[price < 500000 & price > 100]
 
 # the variable 'abtest' seems to be linked to some sort av A/B-testing
 # that may or may not be linked to the website rather than the
-# advertisements. We'll keep this column for now.
-
+# advertisements. This won't be used, so it is deleted.
 # dateCreated, dateCrawled and lastSeen are not attributes we
-# will need for this analysis, so they are removed
+# will need for this analysis, so they are removed.
+auto$abtest      <- NULL
 auto$dateCrawled <- NULL
 auto$lastSeen    <- NULL
 auto$dateCreated <- NULL
@@ -67,6 +67,46 @@ table(is.na(auto$model))
 # production year from 'rel' are the same, though this may not necessarily be true
 auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
 
+# fixing brand/model names in order to match with the other data sets
+auto$brand <- ifelse(auto$brand == 'mercedes_benz', 'mercedes', auto$brand)
+auto$brand <- ifelse(auto$brand == 'alfa_romeo', 'alfa romeo',  auto$brand)
+auto$brand <- ifelse(auto$brand == 'land_rover', 'land rover',  auto$brand)
+auto$model <- ifelse(auto$model == 'rangerover', 'range rover', auto$model)
+auto$model <- gsub('_', ' ',      auto$model)
+auto$model <- sub(' reihe', '',   auto$model)
+auto$model <- sub(' klasse', '',  auto$model)
+auto$model <- sub('1er', '1',     auto$model)
+auto$model <- sub('3er', '3',     auto$model)
+auto$model <- sub('5er', '5',     auto$model)
+auto$model <- sub('6er', '6',     auto$model)
+auto$model <- sub('7er', '7',     auto$model)
+auto$model <- sub('mx', 'mx-5',   auto$model)
+auto$model <- sub(' max', '-max', auto$model)
+
+# translating properties in the data set
+auto$notRepairedDamage <- sub('ja', 'yes',  auto$notRepairedDamage)
+auto$notRepairedDamage <- sub('nein', 'no', auto$notRepairedDamage)
+
+auto$gearbox <- sub('automatik', 'automatic', auto$gearbox)
+auto$gearbox <- sub('manuell', 'manual',      auto$gearbox)
+
+auto$fuelType <- sub('benzin', 'petrol',              auto$fuelType)
+auto$fuelType <- sub('elektro', 'electric',           auto$fuelType)
+auto$fuelType <- sub('lpg', 'liquefied petroleum',    auto$fuelType)
+auto$fuelType <- sub('cng', 'compressed natural gas', auto$fuelType)
+
+auto$vehicleType <- sub('cabrio', 'convertible',   auto$vehicleType)
+auto$vehicleType <- sub('kombi', 'station wagon',  auto$vehicleType)
+auto$vehicleType <- sub('kleinwagen', 'hatchback', auto$vehicleType)
+auto$vehicleType <- sub('bus', 'mini-van',         auto$vehicleType)
+auto$vehicleType <- sub('limousine', 'sedan',      auto$vehicleType)
+
+# removing the "other" classifications
+auto <- auto[auto$brand != "sonstige_autos"]
+auto <- auto[auto$fuelType != "andere"]
+auto <- auto[auto$vehicleType != "andere"]
+
+
 
 
 
@@ -76,46 +116,50 @@ auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
 rel <- fread('reliability.csv')
 
 ## cleaning the data ##
-# remove strings and change fault_rate and mileage into numbers
+# remove strings and change fault_rate, mileage and car production year into numbers
 rel$mileage <- sub(' km', '', rel$mileage)
 rel$mileage <- sub(' '  , '', rel$mileage)
-rel$mileage <-      as.integer(rel$mileage)
+rel$mileage <-     as.integer(rel$mileage)
 
 rel$fault_rate <- sub('%', '', rel$fault_rate)
-rel$fault_rate <-    as.numeric(rel$fault_rate)
+rel$fault_rate <-   as.numeric(rel$fault_rate)
 
-# separate car_make_model into car brand and car model
+rel$car_prod_y <- as.numeric(rel$car_prod_y)
+
+# separate car_make_model into separate models
 rel <- rel %>%
-  separate(car_make_model, c('car_brand', 'car_model'), extra = 'merge')
+  separate(car_make_model, c('brand', 'model'), extra = 'merge')
 
 # substitue the special letters for regular letters
-rel$car_brand <- sub('Š', 's', rel$car_brand)
-rel$car_brand <- sub('ë', 'e', rel$car_brand)
-rel$car_model <- sub('é', 'e', rel$car_model)
-rel$car_model <- sub('ó', 'o', rel$car_model)
+rel$brand <- sub('Š', 's', rel$brand)
+rel$brand <- sub('ë', 'e', rel$brand)
+rel$model <- sub('é', 'e', rel$model)
+rel$model <- sub('ó', 'o', rel$model)
+rel$model <- sub('´', '',  rel$model)
 
 # set all characters to lower case
-rel$car_brand <- tolower(rel$car_brand)
-rel$car_model <- tolower(rel$car_model)
+rel$brand <- tolower(rel$brand)
+rel$model <- tolower(rel$model)
 
 # fixing the brand names that have two names or that needs fixing (mercedes benz, alfa romeo and bmw mini)
-rel$car_brand <- ifelse(rel$car_brand == 'mercedes', 'mercedes benz', rel$car_brand)
-rel$car_model <- ifelse(rel$car_brand == 'mercedes benz', sub('benz ', '', rel$car_model), rel$car_model)
+rel$brand <- ifelse(rel$brand == 'mercedes', 'mercedes benz', rel$brand)
+rel$model <- ifelse(rel$brand == 'mercedes benz', sub('benz ', '', rel$model), rel$model)
+rel$brand <- ifelse(rel$brand == 'mercedes benz', 'mercedes', rel$brand)
 
-rel$car_brand <- ifelse(rel$car_brand == 'alfa', 'alfa romeo', rel$car_brand)
-rel$car_model <- ifelse(rel$car_brand == 'alfa romeo', sub('romeo ', '', rel$car_model), rel$car_model)
+rel$brand <- ifelse(rel$brand == 'alfa', 'alfa romeo', rel$brand)
+rel$model <- ifelse(rel$brand == 'alfa romeo', sub('romeo ', '', rel$model), rel$model)
 
-rel$car_model <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'mini', 'cooper', rel$car_model)
-rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'cooper', 'mini', rel$car_brand)
-rel$car_model <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'mini countryman', 'countryman', rel$car_model)
-rel$car_brand <- ifelse(rel$car_brand == 'bmw' & rel$car_model == 'countryman', 'mini', rel$car_brand)
+rel$model <- ifelse(rel$brand == 'bmw' & rel$model == 'mini', 'cooper', rel$model)
+rel$brand <- ifelse(rel$brand == 'bmw' & rel$model == 'cooper', 'mini', rel$brand)
+rel$model <- ifelse(rel$brand == 'bmw' & rel$model == 'mini countryman', 'countryman', rel$model)
+rel$brand <- ifelse(rel$brand == 'bmw' & rel$model == 'countryman', 'mini', rel$brand)
 
 # Reshaping fault rate to facilitate further manipulation
 rel_fr <- rel %>% 
   spread(report_year, fault_rate) %>%
   select(2:3,5:10) %>% 
   gather(report_year, fault_rate, 4:8, na.rm = TRUE) %>%
-  distinct(car_brand, car_model, car_prod_y, report_year, .keep_all = TRUE) %>%
+  distinct(brand, model, car_prod_y, report_year, .keep_all = TRUE) %>%
   spread(report_year, fault_rate)
 
 even_fr <- (rel_fr$car_prod_y == '2002' | rel_fr$car_prod_y == '2004' | rel_fr$car_prod_y == '2006' |
@@ -147,7 +191,7 @@ rel_mil <- rel %>%
   spread(report_year, mileage) %>%
   select(2:3,5:10) %>% 
   gather(report_year, mileage, 4:8, na.rm = TRUE) %>%
-  distinct(car_brand, car_model, car_prod_y, report_year, .keep_all = TRUE) %>%
+  distinct(brand, model, car_prod_y, report_year, .keep_all = TRUE) %>%
   spread(report_year, mileage)
 
 even_mil <- (rel_mil$car_prod_y == '2002' | rel_mil$car_prod_y == '2004' | rel_mil$car_prod_y == '2006' |
@@ -201,6 +245,7 @@ crash <- crash %>%
 # substitue the special letters for regular letters
 crash$brand <- sub('ò', 'o', crash$brand)
 crash$model <- sub('é', 'e', crash$model)
+crash$model <- sub('`', '', crash$model)
 
 # set all characters to lower case
 crash$brand <- tolower(crash$brand)
@@ -212,7 +257,6 @@ crash$brand <- sub('vw', 'volkswagen', crash$brand)
 crash$brand <- sub('alfa', 'alfa romeo', crash$brand)
 
 crash$model <- ifelse(crash$brand == 'alfa romeo', sub('romeo ', '', crash$model), crash$model)
-
 crash$model <- ifelse(crash$brand == 'mercedes', sub('-klasse', '', crash$model), crash$model)
 
 crash$brand <- ifelse(crash$brand == 'land', 'land rover', crash$brand)
@@ -227,3 +271,10 @@ crash$model <- ifelse(crash$brand == 'mini' & crash$model == 'mini', '', crash$m
 
 crash$model <- ifelse(crash$brand == 'bmw' & crash$model == 'mini cooper', 'cooper', crash$model)
 crash$brand <- ifelse(crash$model == 'cooper', 'mini', crash$brand)
+
+# transforming the model year from characters to integers
+
+
+
+
+
