@@ -33,12 +33,14 @@ auto$offerType <- NULL
 
 # see if cars with very high/low price are actual advertisements
 print(auto[auto$price < 100])
-print(auto[auto$price > 500000])
+print(auto[auto$price > 50000])
 
 # cars that are advertised as either very expensive or very inexpensive
-# seem to be primarily not priced correctly, but offers for car-for-car trades
-# or other advertisements where the price is incorrect. These are thusly removed
-auto <- auto[price < 500000 & price > 100]
+# seem to be priced incorrectly most times, but offers for car-for-car trades
+# or other advertisements where the price is incorrect. These are therefore
+# removed. In addition, since the goal is to create a search for most people,
+# extremely expensive cars (even if it's a real ad) are removed.
+auto <- auto[price < 50000 & price > 100]
 
 # note that the dataset has not included whether prices are stated
 # as 'VB' which stands for Verhandlungsbasis (negotiable) or not,
@@ -48,12 +50,20 @@ auto <- auto[price < 500000 & price > 100]
 # the variable 'abtest' seems to be linked to some sort av A/B-testing
 # that may or may not be linked to the website rather than the
 # advertisements. This won't be used, so it is deleted.
-# dateCreated, dateCrawled and lastSeen are not attributes we
-# will need for this analysis, so they are removed.
-auto$abtest      <- NULL
-auto$dateCrawled <- NULL
-auto$lastSeen    <- NULL
-auto$dateCreated <- NULL
+# dateCreated, dateCrawled, lastSeen, monthOfRegstration and postalCode
+# are not attributes we will need for this analysis, so they are removed.
+auto$abtest              <- NULL
+auto$dateCrawled         <- NULL
+auto$lastSeen            <- NULL
+auto$dateCreated         <- NULL
+auto$monthOfRegistration <- NULL
+auto$postalCode          <- NULL
+
+# cars advertised with an extremely powerful motor may not be
+# accurately described in the ads. To control for this, cars that
+# supposedly have more than 900 PS (about the same as 900 BHP) are
+# removed. The same seems to be true for cars with 25 PS or less.
+auto <- auto[powerPS <= 900 & powerPS > 25]
 
 # the ads need to be connected by production year and brand/model
 # if this information is not available, we'll drop the row
@@ -102,10 +112,19 @@ auto$vehicleType <- sub('bus', 'mini-van',         auto$vehicleType)
 auto$vehicleType <- sub('limousine', 'sedan',      auto$vehicleType)
 
 # removing the "other" classifications
-auto <- auto[auto$brand != "sonstige_autos"]
-auto <- auto[auto$fuelType != "andere"]
-auto <- auto[auto$vehicleType != "andere"]
+auto <- auto[brand != 'sonstige_autos']
+auto <- auto[fuelType != 'andere']
+auto <- auto[vehicleType != 'andere']
+auto <- auto[vehicleType != '']
+auto <- auto[gearbox != '']
+auto <- auto[fuelType != '']
+auto <- auto[notRepairedDamage != '']
 
+# change 'character'-variables to factors
+auto$vehicleType <- as.factor(auto$vehicleType)
+auto$gearbox <- as.factor(auto$gearbox)
+auto$fuelType <- as.factor(auto$fuelType)
+auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
 
 
 
@@ -226,6 +245,20 @@ rm(rel_fr, rel_mil, even_fr, even_mil)
 rel$report_year <- as.numeric(rel$report_year)
 rel$car_age <- rel$report_year - rel$car_prod_y
 
+# creating nationality markers for each brand
+rel$nationality <- ifelse(rel$brand == 'audi'    | rel$brand == 'bmw'     | rel$brand == 'mercedes' |
+                          rel$brand == 'opel'    | rel$brand == 'porsche' | rel$brand == 'volkswagen',
+                          'german', 'others')
+
+rel$nationality <- ifelse(rel$brand == 'citroen' | rel$brand == 'peugeot' | rel$brand == 'renault' |
+                          rel$brand == 'seat',
+                          'french', rel$nationality)
+
+rel$nationality <- ifelse(rel$brand == 'honda'   | rel$brand == 'mazda'   | rel$brand == 'mitsubishi' |
+                          rel$brand == 'nissan'  | rel$brand == 'subaru'  | rel$brand == 'suzuki' |
+                          rel$brand == 'toyota',
+                          'japanese', rel$nationality)
+
 
 
 
@@ -255,6 +288,8 @@ crash$model <- tolower(crash$model)
 crash$model <- sub('benz citan kombi', 'citan kombi', crash$model)
 crash$brand <- sub('vw', 'volkswagen', crash$brand)
 crash$brand <- sub('alfa', 'alfa romeo', crash$brand)
+crash$model <- sub('3er', '3', crash$model)
+crash$model <- sub('5er', '5', crash$model)
 
 crash$model <- ifelse(crash$brand == 'alfa romeo', sub('romeo ', '', crash$model), crash$model)
 crash$model <- ifelse(crash$brand == 'mercedes', sub('-klasse', '', crash$model), crash$model)
@@ -272,9 +307,81 @@ crash$model <- ifelse(crash$brand == 'mini' & crash$model == 'mini', '', crash$m
 crash$model <- ifelse(crash$brand == 'bmw' & crash$model == 'mini cooper', 'cooper', crash$model)
 crash$brand <- ifelse(crash$model == 'cooper', 'mini', crash$brand)
 
+
+
+# change "character"-variables to factors
+crash$brand <- as.factor(crash$brand)
+crash$model <- as.factor(crash$model)
+
 # transforming the model year from characters to integers
 
 
 
 
 
+### exploratory data analysis ###
+## auto data set ##
+library(ggplot2)
+library(scales)
+
+summary(auto)
+
+# let's look at the kilometer and price variables
+plot(auto$kilometer, auto$price)
+
+# let's take a look at the kilometer variable
+hist(auto$kilometer)
+
+table(auto$kilometer)
+
+hist(auto$yearOfRegistration[auto$kilometer == 150000])
+
+ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
+  geom_point(alpha = 0.01) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~vehicleType)
+
+##reliability data set
+summary(rel)
+
+ggplot(rel, aes(car_age, fault_rate, col = brand), legend = FALSE) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~brand) +
+  theme(legend.position = 'none')
+
+ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~brand) +
+  theme(legend.position = 'none')
+
+
+#ggplot(rel, aes(mileage/1000, car_age, col = brand), legend = FALSE) +
+#  geom_point(alpha = 0.2) +
+#  geom_smooth(se = TRUE) +
+#  facet_wrap(~brand) +
+#  theme(legend.position = 'none')
+
+
+ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~nationality) +
+  theme(legend.position = 'none')
+
+ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~nationality) +
+  theme(legend.position = 'none')
+
+ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+  geom_smooth(se = FALSE)
+
+ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
+  geom_smooth(se = FALSE)
+
+
+## crash rating data set
+summary(crash)
