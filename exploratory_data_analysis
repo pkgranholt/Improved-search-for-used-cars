@@ -142,10 +142,10 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
 ```
 
 Now we see part of the reason why Porsche does so well - it appears that they
-aren't driven as far as a lot of other brands. Porsches are luxury cars after
-all, it makes sense that they are driven less. But Mini still compares poorly
-against the Japanese brands, for instance. Could it be that the nationality of
-the cars are an important factor?
+aren't driven as far as a lot of  the other brands. Porsches are luxury cars
+after all, it makes sense that they are driven less. But Mini still compares
+poorly against the Japanese brands, for instance. Could it be that the
+nationality of the cars are an important factor?
 ```
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = FALSE)
