@@ -169,4 +169,36 @@ are higher when just age is accounted for.
 Let's start off with a summary of the data set.
 ```
 summary(crash)
+
+brand            model         stars          model_y_start   model_y_end  
+renault   : 33   3      :  6   Min.   :1.000   Min.   :1995   Min.   :2002  
+volkswagen: 32   megane :  5   1st Qu.:4.000   1st Qu.:2004   1st Qu.:2010  
+ford      : 28   5      :  4   Median :5.000   Median :2009   Median :2017  
+citroen   : 25   c      :  4   Mean   :4.372   Mean   :2008   Mean   :2013  
+mercedes  : 24   passat :  4   3rd Qu.:5.000   3rd Qu.:2013   3rd Qu.:2017  
+kia       : 23   6      :  3   Max.   :5.000   Max.   :2016   Max.   :2017  
+(Other)   :306   (Other):445   
 ```
+
+After the cleaning, we see that the model years overlap nicely with the other
+data sets.
+
+The crash test scores show that most cars get a very good safety rating. More
+than half of the cars got five stars, according to the median of five stars.
+
+Let's look closer at the crash ratings.
+
+```
+ggplot(crash, aes(as.integer(stars), y_mean, col = brand), legend = FALSE) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~brand) +
+  theme(legend.position = 'none')
+```
+
+Here is the stars-rating plotted against the middle of the production run of
+each car, shown by brand. Most seem to have a pattern that goes up to the right
+in the graphs, which indicates that as newer cars come to market, they also
+achieve a better crash test score.
+
+We can also see that those few brands that have only five star ratings, tend to
+only have recent car models.
