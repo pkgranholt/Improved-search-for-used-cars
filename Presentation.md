@@ -60,22 +60,23 @@ table(auto%kilometer)
 
 This confirms that the kilometer variable is saved in bins. I suspect that the high number of 150 000 km cars reflect that these are older cars. This makes sense since the car prices that are usually below 10 000 EUR. Let's confirm this now.
 ```r
-long <- auto[kilometer == 150000]
-hist(long$yearOfRegistration)
+hist(auto$yearOfRegistration[auto$kilometer == 150000])
 ```
 
-We can see that among the cars that have registered 150 000 km, most of them
-are older, with fewer and fewer cars that have driven that far for each year
-we get closer to 2017.
+![Histogram of registration year for cars that have driven 150 000 km](https://user-images.githubusercontent.com/26480394/27181078-47f7d8a4-51d6-11e7-9ce8-4b81de6d3a88.png)
+
+We can see that among the cars that have registered 150 000 km, most of them are older, with fewer and fewer cars that have driven that far for each year we get closer to 2017.
 
 
 Let's now look at the different car types - how are they different?
 ```r
-ggplot(fifty, aes(price, yearOfRegistration, col = vehicleType)) +
+ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
   geom_point(alpha = 0.01) +
   geom_smooth(se = TRUE) +
   facet_wrap(~vehicleType)
 ```
+
+![plot of car types according to price and registration year](https://user-images.githubusercontent.com/26480394/27181190-c0cb6b92-51d6-11e7-9a6f-fec9bb35ccb3.png)
 
 We can see that there are some interesting patterns here. First off, the low
 alpha-value allow us to see the spread in prices, and where there are a lot
