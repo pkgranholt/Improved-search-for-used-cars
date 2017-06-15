@@ -128,9 +128,7 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
 
 ![plot car age fault rate brand](https://user-images.githubusercontent.com/26480394/27182099-7a30c05c-51da-11e7-907f-b9738b668b81.png)
 
-When we compare the different brand's fault rates across years, we see that
-there are some big differences. Look at how Mini and Porsche differs. Porsche
-has lower than half of the expected fault rate when the cars are 11 years old.
+When we compare the different brand's fault rates across years, we see that there are some big differences. Look at how Mini and Porsche differs. Porsche has lower than half of the expected fault rate when the cars are 11 years old.
 
 Let's break it down by mileage as well.
 ```r
@@ -143,11 +141,7 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
 
 ![plot mileage fault rate brand](https://user-images.githubusercontent.com/26480394/27182033-2c15e4e2-51da-11e7-956a-65a6a9d4f18f.png)
 
-Now we see part of the reason why Porsche does so well - it appears that they
-aren't driven as far as a lot of  the other brands. Porsches are luxury cars
-after all, it makes sense that they are driven less. But Mini still compares
-poorly against the Japanese brands, for instance. Could it be that the
-nationality of the cars are an important factor?
+Now we see part of the reason why Porsche does so well - it appears that they aren't driven as far as a lot of  the other brands. Porsches are luxury cars after all, it makes sense that they are driven less. But Mini still compares poorly against the Japanese brands, for instance. Could it be that the nationality of the cars are an important factor?
 ```r
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_point(alpha = 0.2) +
@@ -163,10 +157,7 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
 
 ![plot car age fault rate nationality2](https://user-images.githubusercontent.com/26480394/27182451-74b53ee0-51db-11e7-96e6-584dc6f23f64.png)
 
-When we focus on age, it seems the Japanese and German cars have a lower fault
-rate, but after about five years, the Japanese cars have even lower fault rates
-than the German cars. French cars have a reputation for not being the most
-reliable - it seems this data supports that notion.
+When we focus on age, it seems the Japanese and German cars have a lower fault rate, but after about five years, the Japanese cars have even lower fault rates than the German cars. French cars have a reputation for not being the most reliable - it seems this data supports that notion.
 
 ```r
 ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
@@ -183,10 +174,7 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
 
 ![plot mileage fault rate nationality2](https://user-images.githubusercontent.com/26480394/27182627-2e1638c6-51dc-11e7-902d-7c5b117b73f9.png)
 
-When we focus on mileage, the German cars have the lowest fault rates for the
-most part. We can also see here that many of the German cars are driven further
-than the Japanese cars. This might explain in part why the German fault rates
-are higher when just age is accounted for.
+When we focus on mileage, the German cars have the lowest fault rates for the most part. We can also see here that many of the German cars are driven further than the Japanese cars. This might explain in part why the German fault rates are higher when just age is accounted for.
 
 
 ## crash rating data set
@@ -194,35 +182,31 @@ Let's start off with a summary of the data set.
 ```r
 summary(crash)
 
-brand            model         stars          model_y_start   model_y_end  
-renault   : 33   3      :  6   Min.   :1.000   Min.   :1995   Min.   :2002  
-volkswagen: 32   megane :  5   1st Qu.:4.000   1st Qu.:2004   1st Qu.:2010  
-ford      : 28   5      :  4   Median :5.000   Median :2009   Median :2017  
-citroen   : 25   c      :  4   Mean   :4.372   Mean   :2008   Mean   :2013  
-mercedes  : 24   passat :  4   3rd Qu.:5.000   3rd Qu.:2013   3rd Qu.:2017  
-kia       : 23   6      :  3   Max.   :5.000   Max.   :2016   Max.   :2017  
-(Other)   :306   (Other):445   
+        brand         model         stars       model_y_start   model_y_end     nationality      y_mean    
+ renault   : 33   3      :  6   Min.   :1.000   Min.   :1995   Min.   :2002   french  : 78   Min.   :1998  
+ volkswagen: 32   megane :  5   1st Qu.:4.000   1st Qu.:2004   1st Qu.:2010   german  :112   1st Qu.:2007  
+ ford      : 28   5      :  4   Median :5.000   Median :2009   Median :2017   japanese: 90   Median :2012  
+ citroen   : 25   c      :  4   Mean   :4.372   Mean   :2008   Mean   :2013   others  :191   Mean   :2011  
+ mercedes  : 24   passat :  4   3rd Qu.:5.000   3rd Qu.:2013   3rd Qu.:2017                  3rd Qu.:2015  
+ kia       : 23   6      :  3   Max.   :5.000   Max.   :2016   Max.   :2017                  Max.   :2016  
+ (Other)   :306   (Other):445   
 ```
 
-After the cleaning, we see that the model years overlap nicely with the other
-data sets.
+After the cleaning, we see that the model years overlap nicely with the other data sets.
 
-The crash test scores show that most cars get a very good safety rating. More
-than half of the cars got five stars, according to the median of five stars.
+The crash test scores show that most cars get a very good safety rating. More than half of the cars got five stars, according to the median of five stars.
 
 Let's look closer at the crash ratings.
 
 ```r
-ggplot(crash, aes(as.integer(stars), y_mean, col = brand), legend = FALSE) +
+ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
   geom_point(alpha = 0.5) +
   facet_wrap(~brand) +
   theme(legend.position = 'none')
 ```
 
-Here is the stars-rating plotted against the middle of the production run of
-each car, shown by brand. Most seem to have a pattern that goes up to the right
-in the graphs, which indicates that as newer cars come to market, they also
-achieve a better crash test score.
+![plot stars y_mean brand](https://user-images.githubusercontent.com/26480394/27182808-d1dd870c-51dc-11e7-9dfb-a3dd3a31c7ed.png)
 
-We can also see that those few brands that have only five star ratings, tend to
-only have recent car models.
+Here is the stars-rating plotted against the middle of the production run of each car, shown by brand. Most seem to have a pattern that goes up to the right in the graphs, which indicates that as newer cars come to market, they also achieve a better crash test score.
+
+We can also see that those few brands that have only five star ratings, tend to only have recent car models.
