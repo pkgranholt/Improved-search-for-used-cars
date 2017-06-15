@@ -250,14 +250,17 @@ rel$nationality <- ifelse(rel$brand == 'audi'    | rel$brand == 'bmw'     | rel$
                           rel$brand == 'opel'    | rel$brand == 'porsche' | rel$brand == 'volkswagen',
                           'german', 'others')
 
-rel$nationality <- ifelse(rel$brand == 'citroen' | rel$brand == 'peugeot' | rel$brand == 'renault' |
-                          rel$brand == 'seat',
+rel$nationality <- ifelse(rel$brand == 'citroen' | rel$brand == 'peugeot' | rel$brand == 'renault',
                           'french', rel$nationality)
 
 rel$nationality <- ifelse(rel$brand == 'honda'   | rel$brand == 'mazda'   | rel$brand == 'mitsubishi' |
                           rel$brand == 'nissan'  | rel$brand == 'subaru'  | rel$brand == 'suzuki' |
                           rel$brand == 'toyota',
                           'japanese', rel$nationality)
+
+rel$brand       <- as.factor(rel$brand)
+rel$model       <- as.factor(rel$model)
+rel$nationality <- as.factor(rel$nationality)
 
 
 
@@ -275,6 +278,15 @@ crash <- crash[seq(1, nrow(crash), 4),]
 crash <- crash %>%
   separate(brand_model, c('brand', 'model'), extra = 'merge')
 
+# remove test_date as this will not be used in this analysis
+crash$test_date <- NULL
+
+# one car is erroniously labelled with a 0 star rating in the original data set
+crash$stars <- sub('0', '4', crash$stars)
+
+# create stars as factors with levels
+crash$stars = as.integer(crash$stars)
+
 # substitue the special letters for regular letters
 crash$brand <- sub('ò', 'o', crash$brand)
 crash$model <- sub('é', 'e', crash$model)
@@ -288,6 +300,7 @@ crash$model <- tolower(crash$model)
 crash$model <- sub('benz citan kombi', 'citan kombi', crash$model)
 crash$brand <- sub('vw', 'volkswagen', crash$brand)
 crash$brand <- sub('alfa', 'alfa romeo', crash$brand)
+crash$model <- sub('1er', '1', crash$model)
 crash$model <- sub('3er', '3', crash$model)
 crash$model <- sub('5er', '5', crash$model)
 
@@ -307,30 +320,76 @@ crash$model <- ifelse(crash$brand == 'mini' & crash$model == 'mini', '', crash$m
 crash$model <- ifelse(crash$brand == 'bmw' & crash$model == 'mini cooper', 'cooper', crash$model)
 crash$brand <- ifelse(crash$model == 'cooper', 'mini', crash$brand)
 
-
-
 # change "character"-variables to factors
 crash$brand <- as.factor(crash$brand)
 crash$model <- as.factor(crash$model)
 
-# transforming the model year from characters to integers
+# fixing dates that have additional information
+crash$model_y <- sub('/ A5 ', '', crash$model_y)
+crash$model_y <- sub('\\(Peugeot Partner ', '', crash$model_y)
+crash$model_y <- sub('Kleinbus ', '', crash$model_y)
+crash$model_y <- sub('ab Ende 2013 ', '', crash$model_y)
+crash$model_y <- sub('bgl. Citroen Spacetourer, Toyota Proace ', '', crash$model_y)
+crash$model_y <- sub('bgl. Opel Vivaro; ', '', crash$model_y)
+crash$model_y <- sub('bgl. Opel Vivaro, Nissan Primastar; ', '', crash$model_y)
+crash$model_y <- sub('/ XLV ', '', crash$model_y)
+crash$model_y <- sub('\\(Citroen C1,Peugeot 108 ', '', crash$model_y)
+crash$model_y <- sub('Doppelkabine ', '', crash$model_y)
 
+# transforming all model years to the same format
+crash$model_y <- ifelse(crash$model_y == 'ab 2017', '2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2016', '2016 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2015', '2015 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2014', '2014 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2013', '2013 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2012', '2012 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2011', '2011 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2010', '2010 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2009', '2009 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2008', '2008 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2007', '2007 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2006', '2006 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2005', '2005 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2004', '2004 - 2017', crash$model_y)
+crash$model_y <- ifelse(crash$model_y == 'ab 2003', '2003 - 2017', crash$model_y)
 
+# creating starting and ending years for production
+crash$model_y_start <- as.integer(substr(crash$model_y, 1, 4))
+crash$model_y_end <- as.integer(substr(crash$model_y, 8, 11))
+crash$model_y <- NULL
+
+# delete cars that are too old to be matched with the other data sets
+crash <- crash[model_y_end >= 2002]
+
+# creating nationality markers for each brand
+crash$nationality <- ifelse(crash$brand == 'audi'    | crash$brand == 'bmw'     | crash$brand == 'mercedes' |
+                            crash$brand == 'opel'    | crash$brand == 'porsche' | crash$brand == 'volkswagen',
+                            'german', 'others')
+
+crash$nationality <- ifelse(crash$brand == 'citroen' | crash$brand == 'peugeot' | crash$brand == 'renault',
+                            'french', crash$nationality)
+
+crash$nationality <- ifelse(crash$brand == 'honda'   | crash$brand == 'mazda'   | crash$brand == 'mitsubishi' |
+                            crash$brand == 'nissan'  | crash$brand == 'subaru'  | crash$brand == 'suzuki' |
+                            crash$brand == 'toyota',
+                            'japanese', crash$nationality)
 
 
 
 ### exploratory data analysis ###
 ## auto data set ##
 library(ggplot2)
-library(scales)
 
 summary(auto)
 
-# let's look at the kilometer and price variables
-plot(auto$kilometer, auto$price)
+# let's take a look at the price variable
+hist(auto$price)
 
 # let's take a look at the kilometer variable
 hist(auto$kilometer)
+
+ggplot(auto, aes(kilometer)) +
+  geom_density(fill = "lightcyan")
 
 table(auto$kilometer)
 
@@ -344,6 +403,8 @@ ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
 ##reliability data set
 summary(rel)
 
+table(rel$brand)
+
 ggplot(rel, aes(car_age, fault_rate, col = brand), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
@@ -356,14 +417,6 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
   facet_wrap(~brand) +
   theme(legend.position = 'none')
 
-
-#ggplot(rel, aes(mileage/1000, car_age, col = brand), legend = FALSE) +
-#  geom_point(alpha = 0.2) +
-#  geom_smooth(se = TRUE) +
-#  facet_wrap(~brand) +
-#  theme(legend.position = 'none')
-
-
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
@@ -381,7 +434,31 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
 
 ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = FALSE)
+
+rel$yr_km <- rel$mileage / rel$car_age
+
+ggplot(rel, aes(yr_km, fault_rate, col = nationality), legend = FALSE) +
+  geom_smooth(se = FALSE)
+
+ggplot(rel, aes(yr_km, fault_rate, col = brand), legend = FALSE) +
+  geom_point(alpha = 0.2) +
+  facet_wrap(~brand) +
+  theme(legend.position = 'none')
 
 
 ## crash rating data set
 summary(crash)
+
+crash$y_mean <- ((crash$model_y_end - crash$model_y_start)/2) + crash$model_y_start
+
+ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~brand) +
+  theme(legend.position = 'none')
+
+
+## machine learning
+model1 <- lm(price ~ yearOfRegistration + gearbox + powerPS + kilometer, data = auto)
+summary(model1)
+
+
