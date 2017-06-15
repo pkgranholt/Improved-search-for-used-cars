@@ -123,7 +123,7 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   theme(legend.position = 'none')
 ```
 
-![plot mileage fault rate brand](https://user-images.githubusercontent.com/26480394/27182033-2c15e4e2-51da-11e7-956a-65a6a9d4f18f.png)
+![plot car age fault rate brand](https://user-images.githubusercontent.com/26480394/27182099-7a30c05c-51da-11e7-907f-b9738b668b81.png)
 
 When we compare the different brand's fault rates across years, we see that
 there are some big differences. Look at how Mini and Porsche differs. Porsche
@@ -137,6 +137,8 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
   facet_wrap(~brand) +
   theme(legend.position = 'none')
 ```
+
+![plot mileage fault rate brand](https://user-images.githubusercontent.com/26480394/27182033-2c15e4e2-51da-11e7-956a-65a6a9d4f18f.png)
 
 Now we see part of the reason why Porsche does so well - it appears that they
 aren't driven as far as a lot of  the other brands. Porsches are luxury cars
