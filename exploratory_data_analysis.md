@@ -1,4 +1,4 @@
-### Exploratory data analysis
+# Exploratory data analysis
 ## auto data set
 Let's start with looking at the auto data set first, and view the summary:
 
