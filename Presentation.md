@@ -1,5 +1,5 @@
 # Exploratory data analysis
-## auto data set
+## Auto data set
 Let's start with looking at the auto data set first, and view the summary:
 
 ```r
@@ -85,7 +85,7 @@ One particular issue we can see from this plot is the "upward-tail" at the lower
 A final point I found interesting is that there seems to be a sharper downward shift in interest for convertibles after the financial crisis. If one compares it to hatchbacks, you can se how the curve has a much sharper bend around 2010.
 
 
-## reliability data set
+## Reliability data set
 Let's now move on to the reliability data set. We'll start off with a summary:
 ```r
 summary(rel)
@@ -177,7 +177,7 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
 When we focus on mileage, the German cars have the lowest fault rates for the most part. We can also see here that many of the German cars are driven further than the Japanese cars. This might explain in part why the German fault rates are higher when just age is accounted for.
 
 
-## crash rating data set
+## Crash rating data set
 Let's start off with a summary of the data set.
 ```r
 summary(crash)
