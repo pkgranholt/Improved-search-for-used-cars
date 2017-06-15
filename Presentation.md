@@ -5,27 +5,23 @@ Let's start with looking at the auto data set first, and view the summary:
 ```
 summary(auto)
 
-name               price        vehicleType        yearOfRegistration   gearbox             powerPS     
-Length:181682      Min.   :   101   Length:181682      Min.   :2002       Length:181682      Min.   : 26.0  
-Class :character   1st Qu.:  3400   Class :character   1st Qu.:2004       Class :character   1st Qu.: 95.0  
-Mode  :character   Median :  6300   Mode  :character   Median :2007       Mode  :character   Median :130.0  
-                Mean   :  8865                      Mean   :2007                          Mean   :138.1  
-                3rd Qu.: 11500                      3rd Qu.:2010                          3rd Qu.:170.0  
-                Max.   :488997                      Max.   :2015                          Max.   :900.0  
-model             kilometer      monthOfRegistration   fuelType            brand           notRepairedDamage
-Length:181682      Min.   :  5000   Min.   : 0.000      Length:181682      Length:181682      Length:181682     
-Class :character   1st Qu.: 80000   1st Qu.: 3.000      Class :character   Class :character   Class :character  
-Mode  :character   Median :150000   Median : 6.000      Mode  :character   Mode  :character   Mode  :character  
-                Mean   :116454   Mean   : 6.223                                                              
-                3rd Qu.:150000   3rd Qu.: 9.000                                                              
-                Max.   :150000   Max.   :12.000                                                              
-postalCode   
-Min.   : 1067  
-1st Qu.:32423  
-Median :52066  
-Mean   :52599  
-3rd Qu.:73277  
-Max.   :99998
+
+     name               price              vehicleType    yearOfRegistration      gearbox          powerPS         model             kilometer     
+ Length:158995      Min.   :  101   convertible  :11379   Min.   :2002       automatic: 42794   Min.   : 26.0   Length:158995      Min.   :  5000  
+ Class :character   1st Qu.: 3500   coupe        : 7549   1st Qu.:2004       manual   :116201   1st Qu.: 97.0   Class :character   1st Qu.: 80000  
+ Mode  :character   Median : 6550   hatchback    :33363   Median :2007                          Median :131.0   Mode  :character   Median :150000  
+                    Mean   : 8871   mini-van     :18549   Mean   :2007                          Mean   :138.2                      Mean   :115551  
+                    3rd Qu.:11900   sedan        :42814   3rd Qu.:2010                          3rd Qu.:170.0                      3rd Qu.:150000  
+                    Max.   :49999   station wagon:35791   Max.   :2015                          Max.   :900.0                      Max.   :150000  
+                                    suv          : 9550                                                                                            
+                   fuelType        brand           notRepairedDamage
+ compressed natural gas:  391   Length:158995      no :148193       
+ diesel                :72054   Class :character   yes: 10802       
+ electric              :   25   Mode  :character                    
+ hybrid                :  186                                       
+ liquefied petroleum   : 1983                                       
+ petrol                :84356                                       
+                                                                    
 ```
 
 The price seems to be centered around the lower prices, with the 3rd quartile
