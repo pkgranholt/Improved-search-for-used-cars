@@ -121,6 +121,9 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = TRUE) +
   facet_wrap(~nationality) +
   theme(legend.position = 'none')
+  
+ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+  geom_smooth(se = FALSE)
 ```
 
 ![plot car age fault rate brand](https://user-images.githubusercontent.com/26480394/27182099-7a30c05c-51da-11e7-907f-b9738b668b81.png)
@@ -147,16 +150,38 @@ poorly against the Japanese brands, for instance. Could it be that the
 nationality of the cars are an important factor?
 ```r
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
-  geom_smooth(se = FALSE)
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~nationality) +
+  theme(legend.position = 'none')
 
-ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
-  geom_smooth(se = FALSE)
+ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+  geom_smooth(se = FALSE)
 ```
+
+![plot car age fault rate nationality1](https://user-images.githubusercontent.com/26480394/27182554-db38256a-51db-11e7-8530-3bc56495b23f.png)
+
+![plot car age fault rate nationality2](https://user-images.githubusercontent.com/26480394/27182451-74b53ee0-51db-11e7-96e6-584dc6f23f64.png)
 
 When we focus on age, it seems the Japanese and German cars have a lower fault
 rate, but after about five years, the Japanese cars have even lower fault rates
 than the German cars. French cars have a reputation for not being the most
 reliable - it seems this data supports that notion.
+
+```r
+ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(se = TRUE) +
+  facet_wrap(~nationality) +
+  theme(legend.position = 'none')
+
+ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
+  geom_smooth(se = FALSE)
+```
+
+![plot mileage fault rate nationality1](https://user-images.githubusercontent.com/26480394/27182618-2557081e-51dc-11e7-9ea8-f0f9c1f77541.png)
+
+![plot mileage fault rate nationality2](https://user-images.githubusercontent.com/26480394/27182627-2e1638c6-51dc-11e7-902d-7c5b117b73f9.png)
 
 When we focus on mileage, the German cars have the lowest fault rates for the
 most part. We can also see here that many of the German cars are driven further
