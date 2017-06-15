@@ -30,28 +30,27 @@ The price seems to be centered around the lower prices, with the 3rd quartile be
 hist(auto$price)
 ```
 
-![Histogram of the price in the auto data set](https://user-images.githubusercontent.com/26480394/27180592-78ab19f4-51d4-11e7-904b-bf489ab57c0a.png)
+![Histogram of price in the auto data set](https://user-images.githubusercontent.com/26480394/27180592-78ab19f4-51d4-11e7-904b-bf489ab57c0a.png)
 
-The plot confirms that the majority of cars are below 10 000 EUR. 
+The plot confirms that the majority of cars are below 10 000 EUR, and that there are gradually fewer and fewer cars with higher prices. Let's now look at the mileage of the cars.
 
+```r
+hist(auto$kilometer)
+```
 
-We can see
-that prices seem to be on a continuous scale, while kilometers is in bins. This
-plot does a poor job in explaining exactly how many cars there are in each bin
-for kilometers, so let's make a plot to visualize this as well.
+![Histogram of kilometers in the auto data set](https://user-images.githubusercontent.com/26480394/27180709-f7e8b212-51d4-11e7-8c62-e997d79e236e.png)
+
+There seems to be something strange going on with the variable. To look at bit more closely, let's try a density plot.
 ```r
 ggplot(auto, aes(kilometer)) +
   geom_density(fill = "lightcyan")
 ```
 
-This reveals two things - one - there is definitively binning, which means
-kilometers is rounded to some numbers. Two - there is an incredibly high number
-of cars that have registered with 150 000 kilometers compared to the other
-bins. This is likely because the data is truncated, that is, values over
-150 000 km is combined with those in the 150 000 km group.
+![ggplot auto aes kilometer](https://user-images.githubusercontent.com/26480394/27180905-9bf885f8-51d5-11e7-98ec-04cde41c3c15.png)
 
-To be absolutely certain there is binning in the kilometer data, let's find
-unique kilometer values.
+It seems like the kilometer variable is in bins, which means kilometers is rounded to some numbers. Two - there is an incredibly high number of cars that have registered with 150 000 kilometers compared to the other bins. This is likely because the data is truncated, that is, values over 150 000 km is combined with those in the 150 000 km group.
+
+To be absolutely certain there is binning in the kilometer data, let's find the unique kilometer values.
 ```r
 table(auto%kilometer)
 
@@ -59,9 +58,7 @@ table(auto%kilometer)
 1591   1433   4273   4930   5524   6398   7185   7698   8368   9078  10580  24020 101943
 ```
 
-Binning confirmed. I suspect that the high number of 150 000 km cars reflect
-that these are older cars. This makes sense since the car prices that are
-usually below 10 000 EUR. Let's confirm this now.
+This confirms that the kilometer variable is saved in bins. I suspect that the high number of 150 000 km cars reflect that these are older cars. This makes sense since the car prices that are usually below 10 000 EUR. Let's confirm this now.
 ```r
 long <- auto[kilometer == 150000]
 hist(long$yearOfRegistration)
