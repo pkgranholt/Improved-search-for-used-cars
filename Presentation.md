@@ -78,31 +78,29 @@ ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
 
 ![plot of car types according to price and registration year](https://user-images.githubusercontent.com/26480394/27181190-c0cb6b92-51d6-11e7-9a6f-fec9bb35ccb3.png)
 
-We can see that there are some interesting patterns here. First off, the low
-alpha-value allow us to see the spread in prices, and where there are a lot
-of similarly-priced cars. We can see that hatchbacks typically cost less, and
-that the spread is quite small. The sedan-class has a wider spread than the
-other car types, which is hardly surprising, as there's a wide range of sedans.
+We can see that there are some interesting patterns here. First off, the semi-transparent dots allow us to see the spread in prices, and where there are a lot of similarly-priced cars. We can see that hatchbacks typically cost less, and that the spread is quite small. The sedan-class has a wider spread than the other car types, which is hardly surprising, as there's a wider range of sedans.
 
-One particular issue we can see from this plot is the "upward-tail" at the
-lower price ranges that are particularly noticeable for hatchbacks and SUVs.
-This comes primarily from ads that have cars for lease.
+One particular issue we can see from this plot is the "upward-tail" at the lower price ranges that are particularly noticeable for hatchbacks and SUVs. This seems to come from a high number of cars for lease, and they are typically newer.
 
-A final point I found interesting is that there seems to be a sharper
-downward shift in interest for convertibles after the financial crisis. If one
-compares it to sedans, you can se how the curve has a much sharper bend around
-2010.
+A final point I found interesting is that there seems to be a sharper downward shift in interest for convertibles after the financial crisis. If one compares it to hatchbacks, you can se how the curve has a much sharper bend around 2010.
 
 
 ## reliability data set
 Let's now move on to the reliability data set. We'll start off with a summary:
 ```r
 summary(rel)
+
+        brand          model        car_prod_y    report_year     fault_rate       mileage          car_age         nationality  
+ volkswagen: 624   3      :  96   Min.   :2002   Min.   :2013   Min.   : 2.10   Min.   : 22500   Min.   : 1.000   french  : 878  
+ ford      : 412   5      :  89   1st Qu.:2007   1st Qu.:2014   1st Qu.: 9.40   1st Qu.: 54500   1st Qu.: 3.000   german  :2028  
+ mercedes  : 391   911    :  51   Median :2009   Median :2015   Median :15.70   Median : 78500   Median : 6.000   japanese:1200  
+ renault   : 350   a      :  51   Mean   :2009   Mean   :2015   Mean   :17.38   Mean   : 82158   Mean   : 5.942   others  :1911  
+ citroen   : 342   a3     :  51   3rd Qu.:2011   3rd Qu.:2016   3rd Qu.:24.25   3rd Qu.:106000   3rd Qu.: 8.000                  
+ opel      : 342   a4     :  51   Max.   :2015   Max.   :2017   Max.   :45.10   Max.   :197500   Max.   :11.000                  
+ (Other)   :3556   (Other):5628                                                                                                  
 ```
 
-We see that the report years are between 2013 and 2017, with car production
-years between 2002 and 2015. Each report has 2 to 11 years old cars, so
-these numbers match up. The fault rate is between 2.1% and a crazy 45.1%.
+We see that the report years are between 2013 and 2017, with car production years between 2002 and 2015. Each report has 2 to 11 years old cars, so these numbers match up. The fault rate is between 2.1% and a crazy 45.1%.
 
 Let's start by looking at how many observations we have for each car brand:
 ```r
