@@ -52,7 +52,7 @@ It seems like the kilometer variable is in bins, which means kilometers is round
 
 To be absolutely certain there is binning in the kilometer data, let's find the unique kilometer values.
 ```r
-table(auto%kilometer)
+table(auto$kilometer)
 
 5000  10000  20000  30000  40000  50000  60000  70000  80000  90000 100000 125000 150000
 1591   1433   4273   4930   5524   6398   7185   7698   8368   9078  10580  24020 101943
@@ -106,12 +106,12 @@ Let's start by looking at how many observations we have for each car brand:
 ```r
 table(rel$brand)
 
-alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu       fiat       ford      honda
-        81        295        304        112         15        342         69         15        200        412        194
-   hyundai        kia      mazda   mercedes       mini mitsubishi     nissan       opel    peugeot    porsche    renault
-       213        191        255        391         59         83        148        342        186         72        350
-      seat      skoda      smart     subaru     suzuki     toyota volkswagen      volvo
-       167        183         51         32        158        330        624        143
+alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu       fiat       ford 
+        81        295        304        112         15        342         69         15        200        412 
+     honda    hyundai        kia      mazda   mercedes       mini mitsubishi     nissan       opel    peugeot 
+       194        213        191        255        391         59         83        148        342        186 
+   porsche    renault       seat      skoda      smart     subaru     suzuki     toyota volkswagen      volvo 
+        72        350        167        183         51         32        158        330        624        143 
 ```
 
 How does the fault rate vary across the different brands?
@@ -122,6 +122,8 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   facet_wrap(~nationality) +
   theme(legend.position = 'none')
 ```
+
+![plot mileage fault rate brand](https://user-images.githubusercontent.com/26480394/27182033-2c15e4e2-51da-11e7-956a-65a6a9d4f18f.png)
 
 When we compare the different brand's fault rates across years, we see that
 there are some big differences. Look at how Mini and Porsche differs. Porsche
