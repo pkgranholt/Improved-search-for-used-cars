@@ -2,7 +2,7 @@
 ## auto data set
 Let's start with looking at the auto data set first, and view the summary:
 
-```
+```r
 summary(auto)
 
 
@@ -24,19 +24,22 @@ summary(auto)
                                                                     
 ```
 
-The price seems to be centered around the lower prices, with the 3rd quartile
-being listed at 11 000 EUR.
+The price seems to be centered around the lower prices, with the 3rd quartile being listed at 11 000 EUR. Let's take look at how the prices are distributed.
 
-Let's plot price vs. kilometers to see if this holds true.
-```
-plot(auto$kilometer, auto$price)
+```r
+hist(auto$price)
 ```
 
-The plot confirms that the majority of cars are below 10 000 EUR. We can see
+![Histogram of the price in the auto data set](https://user-images.githubusercontent.com/26480394/27180592-78ab19f4-51d4-11e7-904b-bf489ab57c0a.png)
+
+The plot confirms that the majority of cars are below 10 000 EUR. 
+
+
+We can see
 that prices seem to be on a continuous scale, while kilometers is in bins. This
 plot does a poor job in explaining exactly how many cars there are in each bin
 for kilometers, so let's make a plot to visualize this as well.
-```
+```r
 ggplot(auto, aes(kilometer)) +
   geom_density(fill = "lightcyan")
 ```
@@ -49,7 +52,7 @@ bins. This is likely because the data is truncated, that is, values over
 
 To be absolutely certain there is binning in the kilometer data, let's find
 unique kilometer values.
-```
+```r
 table(auto%kilometer)
 
 5000  10000  20000  30000  40000  50000  60000  70000  80000  90000 100000 125000 150000
@@ -59,7 +62,7 @@ table(auto%kilometer)
 Binning confirmed. I suspect that the high number of 150 000 km cars reflect
 that these are older cars. This makes sense since the car prices that are
 usually below 10 000 EUR. Let's confirm this now.
-```
+```r
 long <- auto[kilometer == 150000]
 hist(long$yearOfRegistration)
 ```
@@ -70,7 +73,7 @@ we get closer to 2017.
 
 
 Let's now look at the different car types - how are they different?
-```
+```r
 ggplot(fifty, aes(price, yearOfRegistration, col = vehicleType)) +
   geom_point(alpha = 0.01) +
   geom_smooth(se = TRUE) +
@@ -95,7 +98,7 @@ compares it to sedans, you can se how the curve has a much sharper bend around
 
 ## reliability data set
 Let's now move on to the reliability data set. We'll start off with a summary:
-```
+```r
 summary(rel)
 ```
 
@@ -104,7 +107,7 @@ years between 2002 and 2015. Each report has 2 to 11 years old cars, so
 these numbers match up. The fault rate is between 2.1% and a crazy 45.1%.
 
 Let's start by looking at how many observations we have for each car brand:
-```
+```r
 table(rel$brand)
 
 alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu       fiat       ford      honda
@@ -116,7 +119,7 @@ alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   d
 ```
 
 How does the fault rate vary across the different brands?
-```
+```r
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
@@ -129,7 +132,7 @@ there are some big differences. Look at how Mini and Porsche differs. Porsche
 has lower than half of the expected fault rate when the cars are 11 years old.
 
 Let's break it down by mileage as well.
-```
+```r
 ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
@@ -142,7 +145,7 @@ aren't driven as far as a lot of  the other brands. Porsches are luxury cars
 after all, it makes sense that they are driven less. But Mini still compares
 poorly against the Japanese brands, for instance. Could it be that the
 nationality of the cars are an important factor?
-```
+```r
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = FALSE)
 
@@ -163,7 +166,7 @@ are higher when just age is accounted for.
 
 ## crash rating data set
 Let's start off with a summary of the data set.
-```
+```r
 summary(crash)
 
 brand            model         stars          model_y_start   model_y_end  
@@ -184,7 +187,7 @@ than half of the cars got five stars, according to the median of five stars.
 
 Let's look closer at the crash ratings.
 
-```
+```r
 ggplot(crash, aes(as.integer(stars), y_mean, col = brand), legend = FALSE) +
   geom_point(alpha = 0.5) +
   facet_wrap(~brand) +
