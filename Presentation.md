@@ -1,27 +1,203 @@
-# Exploratory data analysis
+#Capstone project
+
+# Introduction
+
+The idea for this capstone project came from a situation I had a few years ago when I was buying a used car. I spent a lot of time researching, finding the best car according to several criteria, among them safety and reliability. This information is available online, but it annoyed me that the web site I was using to search for cars didn’t have this information readily available. It was therefore a time-consuming process of finding certain brands and models that was suitable, and looking these up. This project aims to solve that problem, by attaching crash test data and reliability data to a large data set with used cars ads.
+
+In order to do this, three data sets need to be stitched together. The data sets contain used car listings, crash test data and reliability data. Each present its own challenge in the wrangling process, and they need to be made uniform for the data sets to compare car models to car models.
+
+In addition, I would like to see if there are viable methods for finding cars that are close to your search, even if there are none that match your exact search.
+
+## The data sets and wrangling
+
+There are three sources for this project:  
+
+1. [Ebay-Klenanzeigen](https://www.kaggle.com/orgesleka/used-cars-database) is a scraping of the German version of Ebay with about 371 000 cars for sale. This will be used as the basis for the search recommendations. This data set is simply called "auto" (the German word for car) in the R code.
+
+The biggest challenge with this data is the size. There are many listings, but not all are relevant. One of the challenges is filtering out the listings that have information that is not meant to be searchable. For instance, quite a few cars have exorbitant prices, that when you read the text in the listing, are there to symbolize that the owner wants to trade the car for another car. This type of information needs to be cleaned or removed for the search parameters to be meaningful.
+
+This data set has the most detail on the cars, down to mileage, production year, the specific model and features for each car. Not all of this information is possible to match to the more aggregated data of the other data sets, and therefore needs to be aggregated to some degree. Ideally, I still want to keep as much information as possible for all the entries, as this will return more meaningful search results.
+
+2. [EURONCAP](https://www.adac.de/infotestrat/tests/crash-test/alletests.aspx) is a European car safety performance assessment programme that tests cars in crash tests. This link is from the German automobile club ADAC, which is the largest automobile club in Europe. They present the EURONCAP data in a more readily available format than EURONCAP themselves.
+
+The biggest challenge here was that the data was stored in pictures. The pictures showed how many stars each car had attained. To create a viable data set from this information, I took the html-code for the website, ran it through some code to extract the table data, including the part of the picture names that indicated how many stars the picture showed (think "3_stars.img", where just the number 3 is extracted).
+
+After that, it was just a question of dividing up the name-column into car brands and car models successfully.
+
+This data set is called "crash" in the R code.
+
+3. [TÜV auto reports](http://www.anusedcar.com) is a source that not only provides data on reliability across different brands, but also different models within each brand. The report is published each year, with different age brackets for the cars.
+
+The biggest challenge in this data set is how the data is aggregated; the ages for the cars are grouped together two-and-two years. So for the 2017 report, the newest cars are in the 2-3 year old bracket. The next group is 4-5 years, and so on. This may have been done to create a simpler data set (I have tried to get in touch with them), but the grouping artifact is an issue when it comes to actually evaluating the different years independently.
+
+To fix this, I've averaged the years that fall in two reports (for instance a car from 2014 is in the "2-3 year old car"-group in both 2016 and 2017). By doing this, the adjusted 2017 report is able to give different reliability data for each year, as a proxy for the actual data that is not available.
+
+Data wrangling-wise, the best way of aggregating this data was to create columns with the dplyr package in R that are easily able to both identify where there are enough data to create the means, and to actually create them as a separate variable. Then the variable was inserted into the "pure" reliability data as a proxy to break up the two consecutive years with identical data
+
+This data set is called "rel" (short for reliability) in the R code.
+
+## About the data fields
+
+The data sets all have information on car names. Only the biggest one have separate fields for car brands and models. Therefore this needs to be created for the other two data sets. There are a few naming conventions that need to be made similar, but apart from that, it's a simple enough process.
+
+In addition, the difference in degree of aggregation means that it is vital to create a common level of detail for the data sets. For instance, what is described as a "Mercedes Benz E-Class Coupe" may merely be called "Mercedes E-Class" in another data set. The "coupe"-detail is lost when we reduce the data sets to the smallest common denominators.
+
+The biggest data set has about 371 000 rows of used cars listings, but only a smaller subset will be used for this project. This is done for two reasons; to use just the data that has complete information for the variables that needs to be searchable, and because the larger data set have older and newer cars than the other two data sets, which is not helpful in this project. The cars whose age are only found in the larger data set is therefore removed. For instance, I don't have crash test data from 1991, therefore I've chosen not to include the cars that are that old.
+
+A lot of the data fields in the listing-data set were not useful for this project, and were rejected. These include the number of pictures for each listing (which erroneously was set to 0 for all listings in the data set) and several meta-data fields that aren't relevant for this project.
+
+All the data sets are in German, and a few issues pertaining to translations and measurements have come up. One is the issue with PS/Pferdstärke vs. the more common BHP/break horse power. After checking with several car enthusiasts, I've concluded that although these two are not technically equal, they are often used interchangeably. I've therefore decided to do so also. This has the benefit of making all of the PS-fields integers and "sensible", whereas a transformation of this variable would make it a little strange when searching (200 PS sounds better than 197.2 BHP).
+
+I think it's also worth noting that the crash test criteria has changed a lot over the years. Anecdotally, I would compare a five-star rating in 2002 to a three-star rating in 2017. This is due to the ever-evolving new requirements for getting a top score, which includes new technology like brake assistance or lane-change warnings. I've intentionally kept the original ratings, as I believe that is more intuitive, but it could be interesting to include devaluations of the older ratings in a future project.
+
+## Limitations
+
+Having to rely on the smallest common denominator from three different data sets means there have to be some concessions. For one, the brands and models are possible to identify for the most part, but features are not. As one can imagine, the same car with different features may behave differently in both crash tests and reliability. A top-specced model typically has extra features, which may include some safety features. Therefore, the ratings should be thought of as a sort of "mean" for each of the car models within years they are tested for.
+
+Secondly, the listing-data set is cut in half after cleaning, most of which could have been usable if the other data sets where more complete. The oldest reliability data is from 2002, where the crash test data is from about 2000 for most models (some have data before this, depending to the launch date of the model).
+
+I think it's also important to recognize that this project will only help you identify which cars fall within which safety/reliability-rating, it will not help you decide on which car is right for you. Purchasing a car is, I believe at least partially an emotional action. If you are like me, and crave more information pertaining to the cars listed for sale, then this project may be of help. If you simply want to find a car you will like, you may be better helped by actually test driving the different cars.
+
+# Data cleaning and wrangling
+
 ## Auto data set
+
+By far the biggest of the three data sets, the auto data set is also the most structured one. information like price, brand and model are already created, and need only be cleaned.
+
+We start off by loading the necessary libraries for the cleaning and wrangling.
+
+```r
+### loading libraries ###
+library(data.table)
+library(dplyr)
+library(tidyr)
+```
+
+Then we import and start cleaning the data set.
+
+```r
+### autos data set ###
+## importing data ##
+auto <- fread(input = 'autos.csv')
+```
+
+What type of sellers are there, and how many of each are there?
+
+```r
+table(auto$seller)
+
+gewerblich     privat
+         3     371821
+```
+
+"Gewerblich" means commercial. It's only a few ads, but I still want to remove these ads from the data set.
+
+```r
+auto <- auto[auto$seller == 'privat']
+auto$seller <- NULL
+```
+
+Let's take a closer look at the number of pictures for each ad.
+
+```r
+table(auto$nrOfPictures)
+
+0
+371821
+```
+
+There are no data in this column, so this is deleted.
+
+```r
+auto$nrOfPictures <- NULL
+```
+
+People looking for cars (eg. not cars that are for sale) needs to be taken out of the data set.
+
+```r
+auto <- auto[auto$offerType == 'Angebot']
+auto$offerType <- NULL
+```
+
+Cars that are advertised as either very expensive or very inexpensive seem to be priced incorrectly most times, but offers for car-for-car trades or other advertisements where the price is incorrect. These are therefore removed. In addition, since the goal is to create a search for most people, extremely expensive cars (even if it's a real ad) are removed.
+
+```r
+auto <- auto[price < 50000 & price > 100]
+```
+
+Note that the data set has no information on whether the prices are stated as "VB" which stands for Verhandlungsbasis (negotiable) or not, which could have been interesting as not all advertisements include a price with "VB".
+
+The variable 'abtest' seems to be linked to some sort av A/B-testing that may or may not be linked to the website rather than the advertisements. This won't be used, so it is deleted. Several of the variables with metadata will not be used and they are removed.
+
+```r
+auto$abtest              <- NULL
+auto$dateCrawled         <- NULL
+auto$lastSeen            <- NULL
+auto$dateCreated         <- NULL
+auto$monthOfRegistration <- NULL
+auto$postalCode          <- NULL
+```
+
+Cars advertised with an extremely powerful motor may not be accurately described in the ads. To control for this, cars that supposedly have more than 900 PS (about the same as 900 BHP) are removed. The same seems to be true for cars with 25 PS or less.
+
+```r
+auto <- auto[powerPS <= 900 & powerPS > 25]
+```
+
+The ads need to be connected by production year and brand/model. If this information is not available, we'll drop the row.
+
+```r
+table(is.na(auto$brand))
+
+FALSE
+319899
+
+table(is.na(auto$model))
+
+FALSE
+319899
+```
+
+No empty values for either brand or model.
+
+The production year for the reliability data is between 2002 and 2015 therefore cars that are newer or older than this are removed we'll assume that registration year from 'auto' and production year from 'rel' are the same, though this may not necessarily be true.
+
+```r
+auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
+```
+
+
+
+
+
+# Exploratory data analysis
+
+In this part I will show some of the analyses that were done to the data sets after cleaning and wrangling.
+
+## Auto data set
+
 Let's start with looking at the auto data set first, and view the summary:
 
 ```r
 summary(auto)
 
 
-     name               price              vehicleType    yearOfRegistration      gearbox          powerPS         model             kilometer     
- Length:158995      Min.   :  101   convertible  :11379   Min.   :2002       automatic: 42794   Min.   : 26.0   Length:158995      Min.   :  5000  
- Class :character   1st Qu.: 3500   coupe        : 7549   1st Qu.:2004       manual   :116201   1st Qu.: 97.0   Class :character   1st Qu.: 80000  
- Mode  :character   Median : 6550   hatchback    :33363   Median :2007                          Median :131.0   Mode  :character   Median :150000  
-                    Mean   : 8871   mini-van     :18549   Mean   :2007                          Mean   :138.2                      Mean   :115551  
-                    3rd Qu.:11900   sedan        :42814   3rd Qu.:2010                          3rd Qu.:170.0                      3rd Qu.:150000  
-                    Max.   :49999   station wagon:35791   Max.   :2015                          Max.   :900.0                      Max.   :150000  
-                                    suv          : 9550                                                                                            
+     name               price              vehicleType    yearOfRegistration      gearbox          powerPS         model             kilometer
+ Length:158995      Min.   :  101   convertible  :11379   Min.   :2002       automatic: 42794   Min.   : 26.0   Length:158995      Min.   :  5000
+ Class :character   1st Qu.: 3500   coupe        : 7549   1st Qu.:2004       manual   :116201   1st Qu.: 97.0   Class :character   1st Qu.: 80000
+ Mode  :character   Median : 6550   hatchback    :33363   Median :2007                          Median :131.0   Mode  :character   Median :150000
+                    Mean   : 8871   mini-van     :18549   Mean   :2007                          Mean   :138.2                      Mean   :115551
+                    3rd Qu.:11900   sedan        :42814   3rd Qu.:2010                          3rd Qu.:170.0                      3rd Qu.:150000
+                    Max.   :49999   station wagon:35791   Max.   :2015                          Max.   :900.0                      Max.   :150000
+                                    suv          : 9550
                    fuelType        brand           notRepairedDamage
- compressed natural gas:  391   Length:158995      no :148193       
- diesel                :72054   Class :character   yes: 10802       
- electric              :   25   Mode  :character                    
- hybrid                :  186                                       
- liquefied petroleum   : 1983                                       
- petrol                :84356                                       
-                                                                    
+ compressed natural gas:  391   Length:158995      no :148193
+ diesel                :72054   Class :character   yes: 10802
+ electric              :   25   Mode  :character
+ hybrid                :  186
+ liquefied petroleum   : 1983
+ petrol                :84356
+
 ```
 
 The price seems to be centered around the lower prices, with the 3rd quartile being listed at 11 000 EUR. Let's take look at how the prices are distributed.
@@ -86,18 +262,19 @@ A final point I found interesting is that there seems to be a sharper downward s
 
 
 ## Reliability data set
+
 Let's now move on to the reliability data set. We'll start off with a summary:
 ```r
 summary(rel)
 
-        brand          model        car_prod_y    report_year     fault_rate       mileage          car_age         nationality  
- volkswagen: 624   3      :  96   Min.   :2002   Min.   :2013   Min.   : 2.10   Min.   : 22500   Min.   : 1.000   french  : 878  
- ford      : 412   5      :  89   1st Qu.:2007   1st Qu.:2014   1st Qu.: 9.40   1st Qu.: 54500   1st Qu.: 3.000   german  :2028  
- mercedes  : 391   911    :  51   Median :2009   Median :2015   Median :15.70   Median : 78500   Median : 6.000   japanese:1200  
- renault   : 350   a      :  51   Mean   :2009   Mean   :2015   Mean   :17.38   Mean   : 82158   Mean   : 5.942   others  :1911  
- citroen   : 342   a3     :  51   3rd Qu.:2011   3rd Qu.:2016   3rd Qu.:24.25   3rd Qu.:106000   3rd Qu.: 8.000                  
- opel      : 342   a4     :  51   Max.   :2015   Max.   :2017   Max.   :45.10   Max.   :197500   Max.   :11.000                  
- (Other)   :3556   (Other):5628                                                                                                  
+        brand          model        car_prod_y    report_year     fault_rate       mileage          car_age         nationality
+ volkswagen: 624   3      :  96   Min.   :2002   Min.   :2013   Min.   : 2.10   Min.   : 22500   Min.   : 1.000   french  : 878
+ ford      : 412   5      :  89   1st Qu.:2007   1st Qu.:2014   1st Qu.: 9.40   1st Qu.: 54500   1st Qu.: 3.000   german  :2028
+ mercedes  : 391   911    :  51   Median :2009   Median :2015   Median :15.70   Median : 78500   Median : 6.000   japanese:1200
+ renault   : 350   a      :  51   Mean   :2009   Mean   :2015   Mean   :17.38   Mean   : 82158   Mean   : 5.942   others  :1911
+ citroen   : 342   a3     :  51   3rd Qu.:2011   3rd Qu.:2016   3rd Qu.:24.25   3rd Qu.:106000   3rd Qu.: 8.000
+ opel      : 342   a4     :  51   Max.   :2015   Max.   :2017   Max.   :45.10   Max.   :197500   Max.   :11.000
+ (Other)   :3556   (Other):5628
 ```
 
 We see that the report years are between 2013 and 2017, with car production years between 2002 and 2015. Each report has 2 to 11 years old cars, so these numbers match up. The fault rate is between 2.1% and a crazy 45.1%.
@@ -106,12 +283,12 @@ Let's start by looking at how many observations we have for each car brand:
 ```r
 table(rel$brand)
 
-alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu       fiat       ford 
-        81        295        304        112         15        342         69         15        200        412 
-     honda    hyundai        kia      mazda   mercedes       mini mitsubishi     nissan       opel    peugeot 
-       194        213        191        255        391         59         83        148        342        186 
-   porsche    renault       seat      skoda      smart     subaru     suzuki     toyota volkswagen      volvo 
-        72        350        167        183         51         32        158        330        624        143 
+alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu       fiat       ford
+        81        295        304        112         15        342         69         15        200        412
+     honda    hyundai        kia      mazda   mercedes       mini mitsubishi     nissan       opel    peugeot
+       194        213        191        255        391         59         83        148        342        186
+   porsche    renault       seat      skoda      smart     subaru     suzuki     toyota volkswagen      volvo
+        72        350        167        183         51         32        158        330        624        143
 ```
 
 How does the fault rate vary across the different brands?
@@ -121,7 +298,7 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = TRUE) +
   facet_wrap(~nationality) +
   theme(legend.position = 'none')
-  
+
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = FALSE)
 ```
@@ -178,18 +355,19 @@ When we focus on mileage, the German cars have the lowest fault rates for the mo
 
 
 ## Crash rating data set
+
 Let's start off with a summary of the data set.
 ```r
 summary(crash)
 
-        brand         model         stars       model_y_start   model_y_end     nationality      y_mean    
- renault   : 33   3      :  6   Min.   :1.000   Min.   :1995   Min.   :2002   french  : 78   Min.   :1998  
- volkswagen: 32   megane :  5   1st Qu.:4.000   1st Qu.:2004   1st Qu.:2010   german  :112   1st Qu.:2007  
- ford      : 28   5      :  4   Median :5.000   Median :2009   Median :2017   japanese: 90   Median :2012  
- citroen   : 25   c      :  4   Mean   :4.372   Mean   :2008   Mean   :2013   others  :191   Mean   :2011  
- mercedes  : 24   passat :  4   3rd Qu.:5.000   3rd Qu.:2013   3rd Qu.:2017                  3rd Qu.:2015  
- kia       : 23   6      :  3   Max.   :5.000   Max.   :2016   Max.   :2017                  Max.   :2016  
- (Other)   :306   (Other):445   
+        brand         model         stars       model_y_start   model_y_end     nationality      y_mean
+ renault   : 33   3      :  6   Min.   :1.000   Min.   :1995   Min.   :2002   french  : 78   Min.   :1998
+ volkswagen: 32   megane :  5   1st Qu.:4.000   1st Qu.:2004   1st Qu.:2010   german  :112   1st Qu.:2007
+ ford      : 28   5      :  4   Median :5.000   Median :2009   Median :2017   japanese: 90   Median :2012
+ citroen   : 25   c      :  4   Mean   :4.372   Mean   :2008   Mean   :2013   others  :191   Mean   :2011
+ mercedes  : 24   passat :  4   3rd Qu.:5.000   3rd Qu.:2013   3rd Qu.:2017                  3rd Qu.:2015
+ kia       : 23   6      :  3   Max.   :5.000   Max.   :2016   Max.   :2017                  Max.   :2016
+ (Other)   :306   (Other):445
 ```
 
 After the cleaning, we see that the model years overlap nicely with the other data sets.
@@ -207,4 +385,4 @@ ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
 
 ![plot stars y_mean brand](https://user-images.githubusercontent.com/26480394/27182808-d1dd870c-51dc-11e7-9dfb-a3dd3a31c7ed.png)
 
-Here is the stars-rating plotted against the middle of the production run of each car, shown by brand. Most seem to have a pattern that goes up to the right in the graphs, which indicates that as newer cars come to market, they also achieve a better crash test score. We can also see that those few brands that have only five star ratings, tend to only have recent car models.
+Here is the stars-rating plotted against the middle of the production run of each car, shown by brand. Most seem to have a pattern that goes up to the right in the graphs, which indicates that as newer cars come to market, they also achieve a better crash test score. We can also see that those few brands that have only five star ratings, tend to only have recent car models. I think it's also interesting to see that a brand reputed for being safe, like Volvo, seems to do no better than for instance Subaru, which at least to me doesn't have a reputation for producing safe cars.
