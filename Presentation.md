@@ -207,6 +207,4 @@ ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
 
 ![plot stars y_mean brand](https://user-images.githubusercontent.com/26480394/27182808-d1dd870c-51dc-11e7-9dfb-a3dd3a31c7ed.png)
 
-Here is the stars-rating plotted against the middle of the production run of each car, shown by brand. Most seem to have a pattern that goes up to the right in the graphs, which indicates that as newer cars come to market, they also achieve a better crash test score.
-
-We can also see that those few brands that have only five star ratings, tend to only have recent car models.
+Here is the stars-rating plotted against the middle of the production run of each car, shown by brand. Most seem to have a pattern that goes up to the right in the graphs, which indicates that as newer cars come to market, they also achieve a better crash test score. We can also see that those few brands that have only five star ratings, tend to only have recent car models.
