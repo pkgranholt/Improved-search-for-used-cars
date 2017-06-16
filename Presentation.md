@@ -1,4 +1,4 @@
-#Capstone project
+# Capstone project
 
 # Introduction
 
@@ -119,7 +119,7 @@ auto <- auto[auto$offerType == 'Angebot']
 auto$offerType <- NULL
 ```
 
-Cars that are advertised as either very expensive or very inexpensive seem to be priced incorrectly most times, but offers for car-for-car trades or other advertisements where the price is incorrect. These are therefore removed. In addition, since the goal is to create a search for most people, extremely expensive cars (even if it's a real ad) are removed.
+Cars that are advertised as either very expensive or very inexpensive seem to be priced incorrectly most times, but offers for car-for-car trades or other advertisements where the price is incorrect. These are therefore removed. This removes many ads with good information, but they are for cars that are quite expensive, considering these are used cars. In the end, I feel this is a worthwhile trade-off.
 
 ```r
 auto <- auto[price < 50000 & price > 100]
@@ -166,6 +166,64 @@ The production year for the reliability data is between 2002 and 2015 therefore 
 auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
 ```
 
+Now we come to some cleaning in the brand and model names. Some of these are pure substitutions, some are substitutions depending on what information is stored in the variables. There are also several examples of German wording that is removed, and not given English wording, to make it easier to read and match with the other data sets. An example would be "BMW 5er", which in English would be a BMW 5-series. This will now be referred to as simply "BMW 5".
+
+```r
+auto$brand <- ifelse(auto$brand == 'mercedes_benz', 'mercedes', auto$brand)
+auto$brand <- ifelse(auto$brand == 'alfa_romeo', 'alfa romeo',  auto$brand)
+auto$brand <- ifelse(auto$brand == 'land_rover', 'land rover',  auto$brand)
+auto$model <- ifelse(auto$model == 'rangerover', 'range rover', auto$model)
+auto$model <- gsub('_', ' ',      auto$model)
+auto$model <- sub(' reihe', '',   auto$model)
+auto$model <- sub(' klasse', '',  auto$model)
+auto$model <- sub('1er', '1',     auto$model)
+auto$model <- sub('3er', '3',     auto$model)
+auto$model <- sub('5er', '5',     auto$model)
+auto$model <- sub('6er', '6',     auto$model)
+auto$model <- sub('7er', '7',     auto$model)
+auto$model <- sub('mx', 'mx-5',   auto$model)
+auto$model <- sub(' max', '-max', auto$model)
+```
+
+Then there are some pure translations. Some of the wording here is chosen to make it as ubiquitous as possible. Note in particular the "mini-van" category, that includes mini-busses, a naming convention that may not be used in some countries.
+
+```r
+auto$notRepairedDamage <- sub('ja', 'yes',  auto$notRepairedDamage)
+auto$notRepairedDamage <- sub('nein', 'no', auto$notRepairedDamage)
+
+auto$gearbox <- sub('automatik', 'automatic', auto$gearbox)
+auto$gearbox <- sub('manuell', 'manual',      auto$gearbox)
+
+auto$fuelType <- sub('benzin', 'petrol',              auto$fuelType)
+auto$fuelType <- sub('elektro', 'electric',           auto$fuelType)
+auto$fuelType <- sub('lpg', 'liquefied petroleum',    auto$fuelType)
+auto$fuelType <- sub('cng', 'compressed natural gas', auto$fuelType)
+
+auto$vehicleType <- sub('cabrio', 'convertible',   auto$vehicleType)
+auto$vehicleType <- sub('kombi', 'station wagon',  auto$vehicleType)
+auto$vehicleType <- sub('kleinwagen', 'hatchback', auto$vehicleType)
+auto$vehicleType <- sub('bus', 'mini-van',         auto$vehicleType)
+auto$vehicleType <- sub('limousine', 'sedan',      auto$vehicleType)
+```
+
+Finally, fields with no data or "other"-categories are removed, and the variables are converted to factors.
+
+```r
+auto <- auto[brand != 'sonstige_autos']
+auto <- auto[fuelType != 'andere']
+auto <- auto[vehicleType != 'andere']
+auto <- auto[vehicleType != '']
+auto <- auto[gearbox != '']
+auto <- auto[fuelType != '']
+auto <- auto[notRepairedDamage != '']
+
+auto$vehicleType       <- as.factor(auto$vehicleType)
+auto$gearbox           <- as.factor(auto$gearbox)
+auto$fuelType          <- as.factor(auto$fuelType)
+auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
+```
+
+## Reliability data set
 
 
 
