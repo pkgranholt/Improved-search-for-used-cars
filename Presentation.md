@@ -2,7 +2,7 @@
 
 # Introduction
 
-The idea for this capstone project came from a situation I had a few years ago when I was buying a used car. I spent a lot of time researching, finding the best car according to several criteria, among them safety and reliability. This information is available online, but it annoyed me that the web site I was using to search for cars didn’t have this information readily available. It was therefore a time-consuming process of finding certain brands and models that was suitable, and looking these up. This project aims to solve that problem, by attaching crash test data and reliability data to a large data set with used cars ads.
+The idea for this capstone project came from a situation I had a few years ago when I was buying a used car. I spent a lot of time researching, finding the best car according to several criteria, among them safety and reliability. This information was available online, but it annoyed me that the web site I was using to search for cars didn’t have this information readily available. It was therefore a time-consuming process of finding certain brands and models that was suitable, and looking these up. This project aims to solve that problem, by attaching crash test data and reliability data to a large data set with used cars ads.
 
 In order to do this, three data sets need to be stitched together. The data sets contain used car listings, crash test data and reliability data. Each present its own challenge in the wrangling process, and they need to be made uniform for the data sets to compare car models to car models.
 
@@ -224,6 +224,71 @@ auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
 ```
 
 ## Reliability data set
+
+For this data set, we are still using the libraries from the auto data set. We start off by importing the data.
+
+```r
+rel <- fread('reliability.csv')
+```
+
+Then we remove non-number characters from the strings that contain the number values, and transform these to numbers.
+
+```r
+rel$mileage <- sub(' km', '', rel$mileage)
+rel$mileage <- sub(' '  , '', rel$mileage)
+rel$mileage <-     as.integer(rel$mileage)
+
+rel$fault_rate <- sub('%', '', rel$fault_rate)
+rel$fault_rate <-   as.numeric(rel$fault_rate)
+
+rel$car_prod_y <- as.numeric(rel$car_prod_y)
+```
+
+Both car brand and car model are in the same column in the data set. This needs to be divided into separate columns. This split is not perfect, as it takes the first space, and puts everything before the space into the brand column, while everything after the first space is put into the model column. For an Alfa Romeo 147, this will be wrong, but I'll get to this a little later.
+
+```r
+rel <- rel %>%
+  separate(car_make_model, c('brand', 'model'), extra = 'merge')
+```
+
+To make it easier to get an exact match, brands and models with special letters are converted to normal letters. All names are also put in lower case.
+
+```r
+rel$brand <- sub('Š', 's', rel$brand)
+rel$brand <- sub('ë', 'e', rel$brand)
+rel$model <- sub('é', 'e', rel$model)
+rel$model <- sub('ó', 'o', rel$model)
+rel$model <- sub('´', '',  rel$model)
+
+rel$brand <- tolower(rel$brand)
+rel$model <- tolower(rel$model)
+```
+
+Next up is cleaning of names. Alfa Romeo, Mercedes Benz and the different Mini versions needs to be corrected. Mini is in this data set referred to as BMW Mini. While this is technically correct, I will be considering Mini as its own brand.
+
+```r
+rel$brand <- ifelse(rel$brand == 'mercedes', 'mercedes benz', rel$brand)
+rel$model <- ifelse(rel$brand == 'mercedes benz', sub('benz ', '', rel$model), rel$model)
+rel$brand <- ifelse(rel$brand == 'mercedes benz', 'mercedes', rel$brand)
+
+rel$brand <- ifelse(rel$brand == 'alfa', 'alfa romeo', rel$brand)
+rel$model <- ifelse(rel$brand == 'alfa romeo', sub('romeo ', '', rel$model), rel$model)
+
+rel$model <- ifelse(rel$brand == 'bmw' & rel$model == 'mini', 'cooper', rel$model)
+rel$brand <- ifelse(rel$brand == 'bmw' & rel$model == 'cooper', 'mini', rel$brand)
+rel$model <- ifelse(rel$brand == 'bmw' & rel$model == 'mini countryman', 'countryman', rel$model)
+rel$brand <- ifelse(rel$brand == 'bmw' & rel$model == 'countryman', 'mini', rel$brand)
+```
+
+The next part was a little tricky. In the original data set, fault rates only changed every two years. But I want to differentiate between the fault rates every year. The way I did this, was to create means between the reports that overlapped. See the picture below for a visual representation of the data.
+
+![Explanation transformation of means in the reliability data](https://user-images.githubusercontent.com/26480394/27224571-1f806a74-5296-11e7-8838-06324a3be37b.png)
+
+The goal was to transform the fault rates into variables that are in two columns next to each other for the same production year, but for different report years. For example, a car produced in 2014, will be in the "2-3 year old cars"-category in both 2016 and 2017. But I want to differentiate these two years (that have the same fault rate in the original data set), so that if one were to look up the car from 2014 in the 2016 report and in the 2017 report, you would get different results.
+
+
+
+
 
 
 
