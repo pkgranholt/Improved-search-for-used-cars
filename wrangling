@@ -4,10 +4,6 @@ library(data.table)
 library(dplyr)
 library(tidyr)
 
-
-
-
-
 ### autos data set ###
 ## importing data ##
 auto <- fread(input = 'autos.csv')
@@ -121,9 +117,9 @@ auto <- auto[fuelType != '']
 auto <- auto[notRepairedDamage != '']
 
 # change 'character'-variables to factors
-auto$vehicleType <- as.factor(auto$vehicleType)
-auto$gearbox <- as.factor(auto$gearbox)
-auto$fuelType <- as.factor(auto$fuelType)
+auto$vehicleType       <- as.factor(auto$vehicleType)
+auto$gearbox           <- as.factor(auto$gearbox)
+auto$fuelType          <- as.factor(auto$fuelType)
 auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
 
 
@@ -182,7 +178,8 @@ rel_fr <- rel %>%
   spread(report_year, fault_rate)
 
 even_fr <- (rel_fr$car_prod_y == '2002' | rel_fr$car_prod_y == '2004' | rel_fr$car_prod_y == '2006' |
-            rel_fr$car_prod_y == '2008' | rel_fr$car_prod_y == '2010' | rel_fr$car_prod_y == '2014')
+            rel_fr$car_prod_y == '2008' | rel_fr$car_prod_y == '2010' | rel_fr$car_prod_y == '2012' |
+            rel_fr$car_prod_y == '2014' )
 
 # creating means for reports that overlap (see the read.me file for the reason why)
 rel_fr$mean1617 <- rowMeans(rel_fr[,c("2016", "2017")], na.rm = TRUE)
@@ -214,7 +211,8 @@ rel_mil <- rel %>%
   spread(report_year, mileage)
 
 even_mil <- (rel_mil$car_prod_y == '2002' | rel_mil$car_prod_y == '2004' | rel_mil$car_prod_y == '2006' |
-             rel_mil$car_prod_y == '2008' | rel_mil$car_prod_y == '2010' | rel_mil$car_prod_y == '2014')
+             rel_mil$car_prod_y == '2008' | rel_mil$car_prod_y == '2010' | rel_mil$car_prod_y == '2012' |
+             rel_mil$car_prod_y == '2014' )
 
 # creating means for reports that overlap (see the read.me file for the reason why)
 rel_mil$mean1617 <- rowMeans(rel_mil[,c("2016", "2017")], na.rm = TRUE)
@@ -376,6 +374,8 @@ crash$nationality <- ifelse(crash$brand == 'honda'   | crash$brand == 'mazda'   
 
 
 
+
+
 ### exploratory data analysis ###
 ## auto data set ##
 library(ggplot2)
@@ -405,45 +405,20 @@ summary(rel)
 
 table(rel$brand)
 
-ggplot(rel, aes(car_age, fault_rate, col = brand), legend = FALSE) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(se = TRUE) +
-  facet_wrap(~brand) +
-  theme(legend.position = 'none')
-
 ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
   facet_wrap(~brand) +
   theme(legend.position = 'none')
 
-ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(se = TRUE) +
-  facet_wrap(~nationality) +
-  theme(legend.position = 'none')
-
 ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
   facet_wrap(~nationality) +
   theme(legend.position = 'none')
 
-ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
-  geom_smooth(se = FALSE)
-
 ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = FALSE)
-
-rel$yr_km <- rel$mileage / rel$car_age
-
-ggplot(rel, aes(yr_km, fault_rate, col = nationality), legend = FALSE) +
-  geom_smooth(se = FALSE)
-
-ggplot(rel, aes(yr_km, fault_rate, col = brand), legend = FALSE) +
-  geom_point(alpha = 0.2) +
-  facet_wrap(~brand) +
-  theme(legend.position = 'none')
 
 
 ## crash rating data set
@@ -456,6 +431,11 @@ ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
   facet_wrap(~brand) +
   theme(legend.position = 'none')
 
+ggplot(crash, aes(stars, y_mean, col = nationality), legend = FALSE) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~nationality) +
+  theme(legend.position = 'none') +
+  geom_jitter()
 
 ## machine learning
 model1 <- lm(price ~ yearOfRegistration + gearbox + powerPS + kilometer, data = auto)
