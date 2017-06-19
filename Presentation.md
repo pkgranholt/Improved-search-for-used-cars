@@ -225,7 +225,7 @@ auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
 
 ## Reliability data set
 
-For this data set, we are still using the libraries from the auto data set. We start off by importing the data.
+This data set was created by stitching together several lists. The data is already quite clean, but it will need some cleaning to make processing possible. For this data set, we are still using the libraries from the auto data set. We start off by importing the data.
 
 ```r
 rel <- fread('reliability.csv')
@@ -264,7 +264,7 @@ rel$brand <- tolower(rel$brand)
 rel$model <- tolower(rel$model)
 ```
 
-Next up is cleaning of names. Alfa Romeo, Mercedes Benz and the different Mini versions needs to be corrected. Mini is in this data set referred to as BMW Mini. While this is technically correct, I will be considering Mini as its own brand.
+Next up is cleaning the brand and model names. Alfa Romeo, Mercedes Benz and the different Mini versions needs to be corrected. Mini is in this data set referred to as BMW Mini. While this is technically correct, I will be considering Mini as its own brand.
 
 ```r
 rel$brand <- ifelse(rel$brand == 'mercedes', 'mercedes benz', rel$brand)
@@ -284,11 +284,13 @@ The next part was a little tricky. In the original data set, fault rates only ch
 
 ![Explanation transformation of means in the reliability data](https://user-images.githubusercontent.com/26480394/27224571-1f806a74-5296-11e7-8838-06324a3be37b.png)
 
+Note the diamond-pattern in the "cleaned data with means"-portion. We will use this pattern in a bit.
+
 A car produced in 2014, will be in the "2-3 year old cars"-category in both 2016 and 2017. I use this fact to create a mean between the reported fault rates of the two reports, but for the same production year of the car. This way, if one were to look up the car from 2014 in the 2016 report and in the 2017 report, you would get different results. I think this is important, because it seems the reason the data is aggregated every two years, is to make the data easier to read (fewer lines). If that's true, it will give a false impression of how fault rates change over the years.
 
-The downside to doing this is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downsides to doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is for report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
+The downside to doing this is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downsides to doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is across report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
 
-We'll start with creating the means for the fault rates. Here the data is transformed so that each report year is a separate column.
+We'll start with creating the means for the fault rates. Here the data is transformed so that each report year is a separate column. This is done twice to remove rows that only contains NA-values. This in effect compresses the data set by quite a bit.
 
 ```r
 rel_fr <- rel %>%
@@ -307,7 +309,9 @@ even_fr <- (rel_fr$car_prod_y == '2002' | rel_fr$car_prod_y == '2004' | rel_fr$c
             rel_fr$car_prod_y == '2014' )
 ```
 
-Now we use the even_fr-vector to create the means and put this value into the correct columns.
+Now we use the even_fr-vector to create the means and put this value into the correct columns. Note that this process is only done four times, as there are only four combinations of sequential report years in the data set (which is the basis for creating the means).
+
+The code below does the following: First the mean between the two report years is created. Then, every time the lowest of the two sequential years is an even number, the mean is put into the fault rate column for both report years. A similar thing is done for when the lowest of the two sequential years is an odd number, but these times, the insertion of the mean is "lagged" one year, so that we get the diamond pattern from the illustration.
 
 ```r
 rel_fr$mean1617 <- rowMeans(rel_fr[,c("2016", "2017")], na.rm = TRUE)
@@ -327,7 +331,7 @@ rel_fr$'2013'[!even_fr] <- rel_fr$mean1314[!even_fr]
 rel_fr$'2014'[!even_fr] <- rel_fr$mean1314[!even_fr]
 ```
 
-Finally we transform the data back to the initial format with fault rate as its own column.
+Finally we transform the data frame back to the initial format with report year and fault rate in their own columns.
 
 ```r
 rel_fr <- rel_fr %>%
@@ -335,7 +339,7 @@ rel_fr <- rel_fr %>%
   gather(report_year, fault_rate, 4:8, na.rm = TRUE)
 ```
 
-Now the same is done for the mileage-variable.
+The same is now done for the mileage-variable.
 
 ```r
 rel_mil <- rel %>%
@@ -370,18 +374,15 @@ rel_mil <- rel_mil %>%
   gather(report_year, mileage, 4:8, na.rm = TRUE)
 ```
 
-Finally in this part, some house cleaning. The temporary data frames are combined, temporary data frames are deleted, car age is created as a variable and nationality markers are created for use in the exploratory analysis later.
+Finally the processed fault rate and mileage are combined and saved in the reliability data set. The temporary data frames are deleted, car age is created as a variable and nationality markers are created for use in the exploratory analysis later.
 
 ```r
-#combining the data frames, and removing the temporary data frames and vectors
 rel <- cbind(rel_fr, mileage = rel_mil$mileage)
 rm(rel_fr, rel_mil, even_fr, even_mil)
 
-# creating a variable for the age of the car based on report year and production year
 rel$report_year <- as.numeric(rel$report_year)
 rel$car_age <- rel$report_year - rel$car_prod_y
 
-# creating nationality markers for each brand
 rel$nationality <- ifelse(rel$brand == 'audi'    | rel$brand == 'bmw'     | rel$brand == 'mercedes' |
                           rel$brand == 'opel'    | rel$brand == 'porsche' | rel$brand == 'volkswagen',
                           'german', 'others')
@@ -418,7 +419,7 @@ crash <- crash %>%
 crash$test_date <- NULL
 ```
 
-In the data set, there is one 0-star-rating. This is not a true rating, there seems to be a mistake in the source. As it's only for this one rating, all 0-values are turned into 4-star-ratings (the true rating of the mistakenly 0-rating). The stars-rating is converted to integers for the summary-portion of the exploratory analysis.
+In the data set, there is one 0-star-rating. This is not a true rating, there seems to be a mistake in the source. As it's only for this one rating, all 0-values are turned into 4-star-ratings (the true rating of the mistaken 0-rating). The stars-rating is converted to integers for the summary-portion of the exploratory analysis.
 
 ```r
 crash$stars <- sub('0', '4', crash$stars)
@@ -461,7 +462,11 @@ crash$brand <- ifelse(crash$model == 'cooper', 'mini', crash$brand)
 
 crash$brand <- as.factor(crash$brand)
 crash$model <- as.factor(crash$model)
+```
 
+This data set has some information in the years-column that is meant to give extra information to the reader. This information is removed.
+
+```r
 crash$model_y <- sub('/ A5 ', '', crash$model_y)
 crash$model_y <- sub('\\(Peugeot Partner ', '', crash$model_y)
 crash$model_y <- sub('Kleinbus ', '', crash$model_y)
@@ -474,7 +479,7 @@ crash$model_y <- sub('\\(Citroen C1,Peugeot 108 ', '', crash$model_y)
 crash$model_y <- sub('Doppelkabine ', '', crash$model_y)
 ```
 
-All dates for the model years are now cleaned. However, they are still in two different formats; from one year to another, or just from a year (presumably all the way until today). To make this a little easier to read for R, all "from year"-values are converted to a start-year and end-year. The end-year is set to be 2017 for all entries.
+All dates for the model years are now cleaned. However, they are still in two different formats; "YYYY - YYYY" and "from YYYY" (presumably all the way until today). To make this a little easier to read for R, all "from year"-values are converted to a start-year and end-year. The end-year is set to be 2017 for all entries.
 
 ```r
 crash$model_y <- ifelse(crash$model_y == 'ab 2017', '2017', crash$model_y)
@@ -494,7 +499,7 @@ crash$model_y <- ifelse(crash$model_y == 'ab 2004', '2004 - 2017', crash$model_y
 crash$model_y <- ifelse(crash$model_y == 'ab 2003', '2003 - 2017', crash$model_y)
 ```
 
-Now all dates are in a YYYY - YYYY format. From there it's easy to divide this into two separate columns.
+Now all dates are in a YYYY - YYYY format. From there it's easy to divide the years into two separate columns.
 
 ```r
 crash$model_y_start <- as.integer(substr(crash$model_y, 1, 4))
@@ -524,9 +529,7 @@ crash$nationality <- ifelse(crash$brand == 'honda'   | crash$brand == 'mazda'   
                             'japanese', crash$nationality)
 ```
 
-
-
-
+This concludes the wrangling part of the project.
 
 # Exploratory data analysis
 
