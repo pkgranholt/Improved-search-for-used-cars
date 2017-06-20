@@ -284,11 +284,11 @@ The next part was a little tricky. In the original data set, fault rates only ch
 
 ![Explanation transformation of means in the reliability data](https://user-images.githubusercontent.com/26480394/27224571-1f806a74-5296-11e7-8838-06324a3be37b.png)
 
-Note the diamond-pattern in the "cleaned data with means"-portion. We will use this pattern in a bit.
+Note the diamond-pattern in the "cleaned data with means"-portion. We will create this pattern in a bit.
 
-A car produced in 2014, will be in the "2-3 year old cars"-category in both 2016 and 2017. I use this fact to create a mean between the reported fault rates of the two reports, but for the same production year of the car. This way, if one were to look up the car from 2014 in the 2016 report and in the 2017 report, you would get different results. I think this is important, because it seems the reason the data is aggregated every two years, is to make the data easier to read (fewer lines). If that's true, it will give a false impression of how fault rates change over the years.
+A car produced in 2014, will be in the "2-3 year old cars"-category in both 2016 and 2017. I use this fact to create a mean between the reported fault rates of the two reports, but for the same production year of the car. This way, if one were to look up the car from 2014 in the 2016 report and in the 2017 report, you would get different results. I think this is important, because the grouping where the fault rate changes only every two years, despite the report being made every year, is likely an artifact of the way the data is gathered or grouped after collection. As such, it's not accurately describing reality, where one would expect fault rates to gradually increase, as opposed to suddenly making an upward jump every two years.
 
-The downside to doing this is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downsides to doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is across report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
+The downside to creating means is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downside of doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is across report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
 
 We'll start with creating the means for the fault rates. Here the data is transformed so that each report year is a separate column. This is done twice to remove rows that only contains NA-values. This in effect compresses the data set by quite a bit.
 
@@ -309,9 +309,9 @@ even_fr <- (rel_fr$car_prod_y == '2002' | rel_fr$car_prod_y == '2004' | rel_fr$c
             rel_fr$car_prod_y == '2014' )
 ```
 
-Now we use the even_fr-vector to create the means and put this value into the correct columns. Note that this process is only done four times, as there are only four combinations of sequential report years in the data set (which is the basis for creating the means).
+Now we use the even_fr-vector to create the means and put this value into the correct columns. Note that this process is only done four times, as there are only four two-year combinations of sequential report years in the data set (which is the basis for creating the means).
 
-The code below does the following: First the mean between the two report years is created. Then, every time the lowest of the two sequential years is an even number, the mean is put into the fault rate column for both report years. A similar thing is done for when the lowest of the two sequential years is an odd number, but these times, the insertion of the mean is "lagged" one year, so that we get the diamond pattern from the illustration.
+The code below does the following: First the mean between the two report years is created. Then, every time the lowest of the two sequential years is an even number, the mean is put into the fault rate column for both report years (feel free to double check with the illustration again to see that this makes sense). This  A similar thing is done when the lowest of the two sequential years is an odd number, but the insertion of the mean is "lagged" by one report year, so that we get the diamond pattern from the illustration.
 
 ```r
 rel_fr$mean1617 <- rowMeans(rel_fr[,c("2016", "2017")], na.rm = TRUE)
@@ -578,6 +578,7 @@ hist(auto$kilometer)
 ![Histogram of kilometers in the auto data set](https://user-images.githubusercontent.com/26480394/27180709-f7e8b212-51d4-11e7-8c62-e997d79e236e.png)
 
 There seems to be something strange going on with the variable. To look at bit more closely, let's try a density plot.
+
 ```r
 ggplot(auto, aes(kilometer)) +
   geom_density(fill = "lightcyan")
@@ -588,6 +589,7 @@ ggplot(auto, aes(kilometer)) +
 It seems like the kilometer variable is in bins, which means kilometers is rounded to some numbers. Two - there is an incredibly high number of cars that have registered with 150 000 kilometers compared to the other bins. This is likely because the data is truncated, that is, values over 150 000 km is combined with those in the 150 000 km group.
 
 To be absolutely certain there is binning in the kilometer data, let's find the unique kilometer values.
+
 ```r
 table(auto$kilometer)
 
@@ -596,6 +598,7 @@ table(auto$kilometer)
 ```
 
 This confirms that the kilometer variable is saved in bins. I suspect that the high number of 150 000 km cars reflect that these are older cars. This makes sense since the car prices that are usually below 10 000 EUR. Let's confirm this now.
+
 ```r
 hist(auto$yearOfRegistration[auto$kilometer == 150000])
 ```
@@ -606,6 +609,7 @@ We can see that among the cars that have registered 150 000 km, most of them are
 
 
 Let's now look at the different car types - how are they different?
+
 ```r
 ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
   geom_point(alpha = 0.01) +
@@ -625,43 +629,52 @@ A final point I found interesting is that there seems to be a sharper downward s
 ## Reliability data set
 
 Let's now move on to the reliability data set. We'll start off with a summary:
+
 ```r
 summary(rel)
 
-        brand          model        car_prod_y    report_year     fault_rate       mileage          car_age         nationality
- volkswagen: 624   3      :  96   Min.   :2002   Min.   :2013   Min.   : 2.10   Min.   : 22500   Min.   : 1.000   french  : 878
- ford      : 412   5      :  89   1st Qu.:2007   1st Qu.:2014   1st Qu.: 9.40   1st Qu.: 54500   1st Qu.: 3.000   german  :2028
- mercedes  : 391   911    :  51   Median :2009   Median :2015   Median :15.70   Median : 78500   Median : 6.000   japanese:1200
- renault   : 350   a      :  51   Mean   :2009   Mean   :2015   Mean   :17.38   Mean   : 82158   Mean   : 5.942   others  :1911
- citroen   : 342   a3     :  51   3rd Qu.:2011   3rd Qu.:2016   3rd Qu.:24.25   3rd Qu.:106000   3rd Qu.: 8.000
- opel      : 342   a4     :  51   Max.   :2015   Max.   :2017   Max.   :45.10   Max.   :197500   Max.   :11.000
- (Other)   :3556   (Other):5628
+brand          model        car_prod_y    report_year     fault_rate       mileage      
+volkswagen: 616   3      :  94   Min.   :2002   Min.   :2013   Min.   : 2.10   Min.   : 22500  
+ford      : 403   5      :  87   1st Qu.:2007   1st Qu.:2014   1st Qu.: 9.50   1st Qu.: 55000  
+mercedes  : 386   911    :  50   Median :2009   Median :2015   Median :16.00   Median : 79500  
+renault   : 343   a      :  50   Mean   :2009   Mean   :2015   Mean   :17.51   Mean   : 82846  
+opel      : 336   a3     :  50   3rd Qu.:2011   3rd Qu.:2016   3rd Qu.:24.45   3rd Qu.:106500  
+citroen   : 335   a4     :  50   Max.   :2015   Max.   :2017   Max.   :45.10   Max.   :197500  
+(Other)   :3502   (Other):5540                                                                 
+car_age         nationality  
+Min.   : 2.000   french  : 861  
+1st Qu.: 4.000   german  :1998  
+Median : 6.000   japanese:1178  
+Mean   : 6.035   others  :1884  
+3rd Qu.: 8.000                  
+Max.   :11.000    
 ```
 
 We see that the report years are between 2013 and 2017, with car production years between 2002 and 2015. Each report has 2 to 11 years old cars, so these numbers match up. The fault rate is between 2.1% and a crazy 45.1%.
 
 Let's start by looking at how many observations we have for each car brand:
+
 ```r
 table(rel$brand)
 
-alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu       fiat       ford
-        81        295        304        112         15        342         69         15        200        412
-     honda    hyundai        kia      mazda   mercedes       mini mitsubishi     nissan       opel    peugeot
-       194        213        191        255        391         59         83        148        342        186
-   porsche    renault       seat      skoda      smart     subaru     suzuki     toyota volkswagen      volvo
-        72        350        167        183         51         32        158        330        624        143
+alfa romeo       audi        bmw  chevrolet   chrysler    citroen      dacia   daihatsu
+        80        291        298        113         15        335         68         15
+      fiat       ford      honda    hyundai        kia      mazda   mercedes       mini
+       197        403        191        210        190        251        386         59
+mitsubishi     nissan       opel    peugeot    porsche    renault       seat      skoda
+        84        146        336        183         71        343        165        178
+     smart     subaru     suzuki     toyota volkswagen      volvo
+        50         32        152        322        616        141
 ```
 
-How does the fault rate vary across the different brands?
+How does the fault rate vary across the different brands? Note that here the data is almost always paired (because of the means created earlier), but the
+
 ```r
-ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+ggplot(rel, aes(car_age, fault_rate, col = brand), legend = FALSE) +
   geom_point(alpha = 0.2) +
   geom_smooth(se = TRUE) +
-  facet_wrap(~nationality) +
+  facet_wrap(~brand) +
   theme(legend.position = 'none')
-
-ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
-  geom_smooth(se = FALSE)
 ```
 
 ![plot car age fault rate brand](https://user-images.githubusercontent.com/26480394/27182099-7a30c05c-51da-11e7-907f-b9738b668b81.png)
@@ -669,6 +682,7 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
 When we compare the different brand's fault rates across years, we see that there are some big differences. Look at how Mini and Porsche differs. Porsche has lower than half of the expected fault rate when the cars are 11 years old.
 
 Let's break it down by mileage as well.
+
 ```r
 ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
   geom_point(alpha = 0.2) +
@@ -680,6 +694,7 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
 ![plot mileage fault rate brand](https://user-images.githubusercontent.com/26480394/27182033-2c15e4e2-51da-11e7-956a-65a6a9d4f18f.png)
 
 Now we see part of the reason why Porsche does so well - it appears that they aren't driven as far as a lot of  the other brands. Porsches are luxury cars after all, it makes sense that they are driven less. But Mini still compares poorly against the Japanese brands, for instance. Could it be that the nationality of the cars are an important factor?
+
 ```r
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_point(alpha = 0.2) +
@@ -718,6 +733,7 @@ When we focus on mileage, the German cars have the lowest fault rates for the mo
 ## Crash rating data set
 
 Let's start off with a summary of the data set.
+
 ```r
 summary(crash)
 
