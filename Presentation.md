@@ -286,9 +286,9 @@ The next part was a little tricky. In the original data set, fault rates only ch
 
 Note the diamond-pattern in the "cleaned data with means"-portion. We will create this pattern in a bit.
 
-A car produced in 2014, will be in the "2-3 year old cars"-category in both 2016 and 2017. I use this fact to create a mean between the reported fault rates of the two reports, but for the same production year of the car. This way, if one were to look up the car from 2014 in the 2016 report and in the 2017 report, you would get different results. I think this is important, because the grouping where the fault rate changes only every two years, despite the report being made every year, is likely an artifact of the way the data is gathered or grouped after collection. As such, it's not accurately describing reality, where one would expect fault rates to gradually increase, as opposed to suddenly making an upward jump every two years.
+A car produced in 2014, will be in the "2-3 year old cars"-category in both 2016 and 2017. I use this fact to create a mean between the reported fault rates of the two reports, but for the same production year of the car. This way, if one were to look up a specific brand and model of car that is either two or three year old in 2017, you would expect some differences between them in fault rates and mileages. I think this is important, because the grouping where the fault rate changes only every two years, despite the report being made every year, is likely an artifact of the way the data is gathered or grouped after collection. As such, it's not accurately describing reality, where one would expect fault rates to gradually increase, as opposed to suddenly making an upward jump every two years.
 
-The downside to creating means is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downside of doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is across report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
+The downside to creating these means is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downside of doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is across report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
 
 We'll start with creating the means for the fault rates. Here the data is transformed so that each report year is a separate column. This is done twice to remove rows that only contains NA-values. This in effect compresses the data set by quite a bit.
 
@@ -309,9 +309,9 @@ even_fr <- (rel_fr$car_prod_y == '2002' | rel_fr$car_prod_y == '2004' | rel_fr$c
             rel_fr$car_prod_y == '2014' )
 ```
 
-Now we use the even_fr-vector to create the means and put this value into the correct columns. Note that this process is only done four times, as there are only four two-year combinations of sequential report years in the data set (which is the basis for creating the means).
+Now we use the even_fr-vector to create the means and put this value into the correct columns. Note that this process is only done four times, as there are only four two-year combinations of sequential report years in the data set.
 
-The code below does the following: First the mean between the two report years is created. Then, every time the lowest of the two sequential years is an even number, the mean is put into the fault rate column for both report years (feel free to double check with the illustration again to see that this makes sense). This  A similar thing is done when the lowest of the two sequential years is an odd number, but the insertion of the mean is "lagged" by one report year, so that we get the diamond pattern from the illustration.
+The code below does the following: First the mean between the two report years is created. Then, every time the lowest of the two sequential years is an even number, the mean is put into the fault rate column for both report years (feel free to double check with the illustration again to see that this makes sense). A similar thing is done when the lowest of the two sequential years is an odd number, but the insertion of the mean is "lagged" by one report year, so that we get the diamond pattern from the illustration.
 
 ```r
 rel_fr$mean1617 <- rowMeans(rel_fr[,c("2016", "2017")], na.rm = TRUE)
@@ -763,3 +763,107 @@ ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
 ![plot stars y_mean brand](https://user-images.githubusercontent.com/26480394/27182808-d1dd870c-51dc-11e7-9dfb-a3dd3a31c7ed.png)
 
 Here is the stars-rating plotted against the middle of the production run of each car, shown by brand. Most seem to have a pattern that goes up to the right in the graphs, which indicates that as newer cars come to market, they also achieve a better crash test score. We can also see that those few brands that have only five star ratings, tend to only have recent car models. I think it's also interesting to see that a brand reputed for being safe, like Volvo, seems to do no better than for instance Subaru, which at least to me doesn't have a reputation for producing safe cars.
+
+# Machine learning
+## Regressions
+
+After looking at the data in the previous section, it would be interesting to find some rule-of-thumb numbers from all this data, so that we have an idea of how the different variables effect the fault rate. These are not meant to be perfectly accurate, nor representative of the whole population of cars. They are merely a way of answering a question we haven't been able to answer so far - how is the fault rate dependent on both the mileage and the age of the car? We've seen how it is changing according to age and mileage separately, but that is of course not the whole pictures. All cars age, and almost all cars are also driven some distance each year. If we assume that only these two variables can explain the fault rate, how much do each of them change the fault rate?
+
+```r
+model2 <- lm(fault_rate ~ mileage + car_age, data = rel)
+summary(model2)
+
+Call:
+lm(formula = fault_rate ~ mileage + car_age, data = rel)
+
+Residuals:
+     Min       1Q   Median       3Q      Max
+-18.2588  -3.2994  -0.4254   2.9425  20.2590
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -8.935e-01  1.746e-01  -5.119 3.17e-07 ***
+mileage      5.311e-05  3.239e-06  16.398  < 2e-16 ***
+car_age      2.321e+00  3.939e-02  58.926  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 5.062 on 5918 degrees of freedom
+Multiple R-squared:  0.7152,	Adjusted R-squared:  0.7151
+F-statistic:  7429 on 2 and 5918 DF,  p-value: < 2.2e-16
+```
+
+Both independent variables get significant p-values, and the R-squared value is quite high, meaning the model looks like a good fit. According to this regression, the fault rate can be described in the following way:
+
+```
+Fault rate = -0.8935 + (0.00005311 * km) + (2.231 * car age)
+```
+
+If a car is five years old, and it has driven 70 000 km, we would expect the fault rate to be..
+
+```
+-0.8935 + (0.00005311 * 70000) + (2.231 * 5) =
+-0.8935 + 3.7177 + 11.605 =
+14.4292
+```
+
+..about 14%.
+
+The rule-of-thumb we can read from this regression is that when both mileage and age is accounted for, the fault rate is expected to go up by just over 5% for every 100 000 km the car drives, and almost 12% every five years (and remember to subtract one percentage point if you want to calculate a fault rate for a specific combination of mileage and age).
+
+What about price? Can we create some estimation on how the different variables in our auto data set effects price? First the car age is created as a variable in the auto data set, then a linear regression is run with price as the dependent variable, and car age, gearbox, PS and mileage as the independent variables.
+
+```r
+auto$car_age <- 2017 - auto$yearOfRegistration
+
+reg_price <- lm(price ~ car_age + gearbox + powerPS + kilometer, data = auto)
+summary(reg_price)
+
+Call:
+lm(formula = price ~ car_age + gearbox + powerPS + kilometer,
+    data = auto)
+
+Residuals:
+   Min     1Q Median     3Q    Max
+-52632  -2234   -225   1812  36207
+
+Coefficients:
+                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)    1.478e+04  5.007e+01  295.28   <2e-16 ***
+car_age       -1.009e+03  3.815e+00 -264.34   <2e-16 ***
+gearboxmanual -1.306e+03  2.581e+01  -50.62   <2e-16 ***
+powerPS        6.375e+01  1.863e-01  342.16   <2e-16 ***
+kilometer     -3.267e-02  3.076e-04 -106.20   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4006 on 158990 degrees of freedom
+Multiple R-squared:  0.7178,	Adjusted R-squared:  0.7178
+F-statistic: 1.011e+05 on 4 and 158990 DF,  p-value: < 2.2e-16
+```
+
+Again, the p-values are sufficiently low to assume that we did not get these results by pure chance, and the R-squared value is high.
+
+If we wrote the equation in full, it would look like this:
+
+```
+Price = 14780 - (1009 * car age) - (1306 * manual transmission) + (63.75 * PS) - (0.03267 * km)
+```
+
+Here manual transmission means 1 and automatic transmission means 0.
+
+If a car is five years old, has driven 70 000 km, has automatic transmission and 125 PS, what do we expect the price to be?
+
+```
+14780 - (1009 * 5) - (1306 * 0) + (63.75 * 125) - (0.03267 * 70 000) =
+14780 - 5045 - 0 + 7968,75 - 2286.9 =
+15 416.86
+```
+
+According to this regression, we would expect the price to be about 15 400 EUR.
+
+Again we can create some rule-of-thumb numbers when thinking about the prices of the cars in this data set. For instance, each year a car get older, you'll lose about 1000 EUR in the selling price. Every 10 000 km the car drives is expected to devalue the car by about 330 EUR. These numbers must be used with caution, or else you may end up thinking that a brand new car, with automatic transmission and 0 PS is worth 14 780 EUR - which doesn't make any sense.
+
+I think it's also worth pointing out that we don't know if the example car with 70 000 km is a Porsche or a Fiat. Knowing this would certainly change the price. We also don't know if it has an unrepaired damage, if it has upgraded leather seats or what the service history is like. These are just estimations based on a large set of aggregated data, hence my insistence on thinking of this as more rule-of-thumb numbers.
+
+## Clustering
