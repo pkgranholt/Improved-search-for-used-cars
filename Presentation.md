@@ -6,17 +6,19 @@ The idea for this capstone project came from a situation I had a few years ago w
 
 In order to do this, three data sets need to be stitched together. The data sets contain used car listings, crash test data and reliability data. Each present its own challenge in the wrangling process, and they need to be made uniform for the data sets to compare car models to car models.
 
-In addition, I would like to see if there are viable methods for finding cars that are close to your search, even if there are none that match your exact search.
+A big thanks to my advisor for this project, Branko Kovac!
 
 ## The data sets and wrangling
 
 There are three sources for this project:  
 
-1. [Ebay-Klenanzeigen](https://www.kaggle.com/orgesleka/used-cars-database) is a scraping of the German version of Ebay with about 371 000 cars for sale. This will be used as the basis for the search recommendations. This data set is simply called "auto" (the German word for car) in the R code.
+1. [Ebay-Klenanzeigen](https://www.kaggle.com/orgesleka/used-cars-database) is a scraping of the German version of Ebay with about 371 000 cars for sale. This will be used as the basis for the search recommendations.
 
 The biggest challenge with this data is the size. There are many listings, but not all are relevant. One of the challenges is filtering out the listings that have information that is not meant to be searchable. For instance, quite a few cars have exorbitant prices, that when you read the text in the listing, are there to symbolize that the owner wants to trade the car for another car. This type of information needs to be cleaned or removed for the search parameters to be meaningful.
 
 This data set has the most detail on the cars, down to mileage, production year, the specific model and features for each car. Not all of this information is possible to match to the more aggregated data of the other data sets, and therefore needs to be aggregated to some degree. Ideally, I still want to keep as much information as possible for all the entries, as this will return more meaningful search results.
+
+This data set is simply called "auto" (the German word for car) in the R code.
 
 2. [EURONCAP](https://www.adac.de/infotestrat/tests/crash-test/alletests.aspx) is a European car safety performance assessment programme that tests cars in crash tests. This link is from the German automobile club ADAC, which is the largest automobile club in Europe. They present the EURONCAP data in a more readily available format than EURONCAP themselves.
 
@@ -704,9 +706,9 @@ ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(method = 'loess', se = FALSE)
 ```
 
-![plot car age fault rate nationality1](https://user-images.githubusercontent.com/26480394/27182554-db38256a-51db-11e7-8530-3bc56495b23f.png)
+![plot car age fault rate nationality1](https://user-images.githubusercontent.com/26480394/27382370-f402f50c-5686-11e7-9847-f3cc1eb45fe7.png)
 
-![plot car age fault rate nationality2](https://user-images.githubusercontent.com/26480394/27182451-74b53ee0-51db-11e7-96e6-584dc6f23f64.png)
+![plot car age fault rate nationality2](https://user-images.githubusercontent.com/26480394/27382415-2ef14330-5687-11e7-98ee-500b053f43a5.png)
 
 When we focus on age, it seems the Japanese and German cars have a lower fault rate, but after about five years, the Japanese cars have even lower fault rates than the German cars. French cars have a reputation for not being the most reliable - it seems this data supports that notion.
 
@@ -721,11 +723,24 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
   geom_smooth(se = FALSE)
 ```
 
-![plot mileage fault rate nationality1](https://user-images.githubusercontent.com/26480394/27182618-2557081e-51dc-11e7-9ea8-f0f9c1f77541.png)
+![plot mileage fault rate nationality1](https://user-images.githubusercontent.com/26480394/27382489-8c0390dc-5687-11e7-801d-62df44ee4a6b.png)
 
-![plot mileage fault rate nationality2](https://user-images.githubusercontent.com/26480394/27182627-2e1638c6-51dc-11e7-902d-7c5b117b73f9.png)
+![plot mileage fault rate nationality2](https://user-images.githubusercontent.com/26480394/27382451-6c43f8a4-5687-11e7-9b2a-b01c9d7b2634.png)
 
 When we focus on mileage, the German cars have the lowest fault rates for the most part. We can also see here that many of the German cars are driven further than the Japanese cars. This might explain in part why the German fault rates are higher when just age is accounted for.
+
+How does fault rate correlate with mileage and car age?
+
+```r
+cor(rel[,5:7], method='pearson')
+
+           fault_rate   mileage   car_age
+fault_rate  1.0000000 0.7402866 0.8379794
+mileage     0.7402866 1.0000000 0.8023974
+car_age     0.8379794 0.8023974 1.0000000
+```
+
+This looks like expected, as fault rate is positively correlated with both mileage and fault rate. We will look further into this under the machine learning part.
 
 
 ## Crash rating data set
@@ -963,12 +978,12 @@ Towards the bottom of the list we see all the cars that have 150 000 km listed a
 
 # Discussion
 
-During all the data wrangling in this project, a few questions came up that I thought I would address here. I'd also like to point out some areas for further exploration.
+At the end of this project, I'd like to point out some areas for further exploration.
 
-There are several places where I've made choices that cuts down on the amount of data, particularly in the auto data set. As I started with more than 371 000 ads, this was not a problem, but it would be interesting to see how many could be used in the final search. A lot of the car models could with meticulous work be matched in the three data sets. However, this would require a lot of time, as I'm not sure using regular expressions would be a simple fix for this. There are so many different model names, some similar and some not. As my time on this project was limited, I have not spent a lot of time matching model names, but this could be done in a future project. Another area that could increase the data available for the final search is a refinement that finds the latest available report year, even if that is from an older report.
+There are several places where I've made choices that cuts down on the amount of data, particularly in the auto data set. As I started with more than 371 000 ads, this was not a problem, but it would be interesting to see how many could be used in the final search. A lot of the car models could with meticulous work be matched in the three data sets. However, this would require a lot of time. There are so many different model names, some similar and some not. As my time on this project was limited, I have not spent a lot of time matching model names, but this could be done in a future project. Another area that could increase the data available for the final search is a refinement that finds the latest available report year, even if that is from an older report.
 
 There are also a lot of possibilities in expanding on the regressions. One might wonder if it could be possible to say something about the expected changes in price in the future for a car you are looking to buy today, for instance. Let's say you want to buy a family car today, but you only need it for four years. Wouldn't it be interesting to know what you could be expected to get for it after those four years? Such a calculator could then even advice you whether or not you should lease a car instead of buying one.
 
 If you were looking at a an older car (12 years old +), the newest reliability report doesn't have data for that car. But what if one could look into predictions of what the current fault rate is, even though this is not available. What if the last fault rate of a car you were interested in was recorded in 2010, and you wanted some estimation on what the fault rate might be today? That could be interesting to look into.
 
-Broadly speaking, I have only looked at car brands and models. But there are sometimes a plethora of different cars within the same model. Perhaps one could use the headlines from the ads to mine out some more information about the cars, which could then be used to classify them at a more granular level. This could potentially save some of the data that was shaved off when the lowest common denominator for the three data sets were determined.
+In the car data, I have primarily looked at car brands and models. But there are sometimes a plethora of different cars within the same model. Perhaps one could use the headlines from the ads to mine out some more information about the cars, which could then be used to classify them at a more granular level. This could potentially save some of the data that was shaved off when the lowest common denominator for the three data sets were determined.
