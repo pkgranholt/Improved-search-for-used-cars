@@ -121,7 +121,8 @@ auto$vehicleType       <- as.factor(auto$vehicleType)
 auto$gearbox           <- as.factor(auto$gearbox)
 auto$fuelType          <- as.factor(auto$fuelType)
 auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
-
+auto$brand             <- as.factor(auto$brand)
+auto$model             <- as.factor(auto$model)
 
 
 
@@ -373,72 +374,133 @@ crash$nationality <- ifelse(crash$brand == 'honda'   | crash$brand == 'mazda'   
                             'japanese', crash$nationality)
 
 
+# 
+# 
+# 
+# ### exploratory data analysis ###
+# ## auto data set ##
+# library(ggplot2)
+# 
+# summary(auto)
+# 
+# # let's take a look at the price variable
+# hist(auto$price)
+# 
+# # let's take a look at the kilometer variable
+# hist(auto$kilometer)
+# 
+# ggplot(auto, aes(kilometer)) +
+#   geom_density(fill = "lightcyan")
+# 
+# table(auto$kilometer)
+# 
+# hist(auto$yearOfRegistration[auto$kilometer == 150000])
+# 
+# ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
+#   geom_point(alpha = 0.01) +
+#   geom_smooth(se = TRUE) +
+#   facet_wrap(~vehicleType)
+# 
+# ##reliability data set
+# summary(rel)
+# 
+# table(rel$brand)
+# 
+# ggplot(rel, aes(car_age, fault_rate, col = brand), legend = FALSE) +
+#   geom_point(alpha = 0.2) +
+#   geom_smooth(se = TRUE) +
+#   facet_wrap(~brand) +
+#   theme(legend.position = 'none')
+# 
+# ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
+#   geom_point(alpha = 0.2) +
+#   geom_smooth(se = TRUE) +
+#   facet_wrap(~brand) +
+#   theme(legend.position = 'none')
+# 
+# ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+#   geom_point(alpha = 0.2) +
+#   geom_smooth(method = loess, se = TRUE) +
+#   facet_wrap(~nationality) +
+#   theme(legend.position = 'none')
+# 
+# ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
+#   geom_point(alpha = 0.2) +
+#   geom_smooth(se = TRUE) +
+#   facet_wrap(~nationality) +
+#   theme(legend.position = 'none')
+# 
+# ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
+#   geom_smooth(se = FALSE)
+# 
+# ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
+#   geom_smooth(method = 'loess', se = FALSE)
+# 
+# ggplot(rel, aes(car_age, fault_rate), legend = FALSE) +
+#   geom_smooth(method = 'loess', se = FALSE)
+# 
+# ## crash rating data set
+# summary(crash)
+# 
+# crash$y_mean <- ((crash$model_y_end - crash$model_y_start)/2) + crash$model_y_start
+# 
+# ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
+#   geom_point(alpha = 0.5) +
+#   facet_wrap(~brand) +
+#   theme(legend.position = 'none')
+# 
+# ggplot(crash, aes(stars, y_mean, col = nationality), legend = FALSE) +
+#   geom_point(alpha = 0.5) +
+#   facet_wrap(~nationality) +
+#   theme(legend.position = 'none') +
+#   geom_jitter()
+# 
+# 
+# 
+# 
+# 
+# ### machine learning ###
+# reg_fault_rate <- lm(fault_rate ~ mileage + car_age, data = rel)
+# summary(reg_fault_rate)
+# 
+# auto$car_age <- 2017 - auto$yearOfRegistration
+# reg_price <- lm(price ~ car_age + gearbox + powerPS + kilometer, data = auto)
+# summary(reg_price)
+# 
+# 
 
 
 
-### exploratory data analysis ###
-## auto data set ##
-library(ggplot2)
+### combining the three data sets ###
 
-summary(auto)
+auto <- left_join(auto, crash)
+setDT(auto)
+auto <- auto[model_y_start < yearOfRegistration & yearOfRegistration <= model_y_end]
 
-# let's take a look at the price variable
-hist(auto$price)
+auto <- left_join(auto, rel)
+setDT(auto)
+auto <- auto[car_prod_y == yearOfRegistration & report_year == 2017]
 
-# let's take a look at the kilometer variable
-hist(auto$kilometer)
+auto$brand       <- as.factor(auto$brand)
+auto$model       <- as.factor(auto$model)
+auto$nationality <- as.factor(auto$nationality)
 
-ggplot(auto, aes(kilometer)) +
-  geom_density(fill = "lightcyan")
+auto$car_age     <- NULL
+auto$report_year <- NULL
+auto$car_prod_y  <- NULL
+auto$nationality <- NULL
+auto$model_y_end <- NULL
 
-table(auto$kilometer)
+colnames(auto)[15] <- "avg_mileage"
 
-hist(auto$yearOfRegistration[auto$kilometer == 150000])
+# creating a variable that compares the average mileage for that car, with what is for sale
+auto$com_mean_km <- auto$kilometer - auto$mileage
 
-ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
-  geom_point(alpha = 0.01) +
-  geom_smooth(se = TRUE) +
-  facet_wrap(~vehicleType)
+## creating a search
+search_results <- auto[stars == 5 & price <= 10000 & price > 500 & fault_rate < 10 & vehicleType == 'station wagon' & notRepairedDamage == 'no']
+search_results <- search_results[order(com_mean_km)]
 
-##reliability data set
-summary(rel)
-
-table(rel$brand)
-
-ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(se = TRUE) +
-  facet_wrap(~brand) +
-  theme(legend.position = 'none')
-
-ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
-  geom_point(alpha = 0.2) +
-  geom_smooth(se = TRUE) +
-  facet_wrap(~nationality) +
-  theme(legend.position = 'none')
-
-ggplot(rel, aes(mileage/1000, fault_rate, col = nationality), legend = FALSE) +
-  geom_smooth(se = FALSE)
-
-
-## crash rating data set
-summary(crash)
-
-crash$y_mean <- ((crash$model_y_end - crash$model_y_start)/2) + crash$model_y_start
-
-ggplot(crash, aes(stars, y_mean, col = brand), legend = FALSE) +
-  geom_point(alpha = 0.5) +
-  facet_wrap(~brand) +
-  theme(legend.position = 'none')
-
-ggplot(crash, aes(stars, y_mean, col = nationality), legend = FALSE) +
-  geom_point(alpha = 0.5) +
-  facet_wrap(~nationality) +
-  theme(legend.position = 'none') +
-  geom_jitter()
-
-## machine learning
-model1 <- lm(price ~ yearOfRegistration + gearbox + powerPS + kilometer, data = auto)
-summary(model1)
-
+# creating a table for Markdown
+library(knitr)
+kable(search_results)
 
