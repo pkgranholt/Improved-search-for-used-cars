@@ -67,7 +67,6 @@ By far the biggest of the three data sets, the auto data set is also the most st
 We start off by loading the necessary libraries for the cleaning and wrangling.
 
 ```r
-### loading libraries ###
 library(data.table)
 library(dplyr)
 library(tidyr)
@@ -76,8 +75,6 @@ library(tidyr)
 Then we import and start cleaning the data set.
 
 ```r
-### autos data set ###
-## importing data ##
 auto <- fread(input = 'autos.csv')
 ```
 
@@ -90,7 +87,7 @@ gewerblich     privat
          3     371821
 ```
 
-"Gewerblich" means commercial. It's only a few ads, but I still want to remove these ads from the data set.
+"Gewerblich" means commercial. For this project, I only want private sellers, so the commercial ads are removed.
 
 ```r
 auto <- auto[auto$seller == 'privat']
@@ -106,7 +103,7 @@ table(auto$nrOfPictures)
 371821
 ```
 
-There are no data in this column, so this is deleted.
+There are no data in this column, so it is deleted.
 
 ```r
 auto$nrOfPictures <- NULL
@@ -119,7 +116,7 @@ auto <- auto[auto$offerType == 'Angebot']
 auto$offerType <- NULL
 ```
 
-Cars that are advertised as either very expensive or very inexpensive seem to be priced incorrectly most times, but offers for car-for-car trades or other advertisements where the price is incorrect. These are therefore removed. This removes many ads with good information, but they are for cars that are quite expensive, considering these are used cars. In the end, I feel this is a worthwhile trade-off.
+Cars that are advertised as either very expensive or very inexpensive seem to be priced incorrectly most times, but offers for car-for-car trades or other advertisements where the price is incorrect. These are therefore removed. This removes many ads with good information, but they are for cars that are quite expensive, considering these are used cars. In the end, I feel this is a worthwhile trade-off. On the lower end of the spectrum, there are cars for sale that are only to be used for parts, and some cars for lease. Setting the floor at 101 euro means a lot of these are filtered out. There are still some cars for lease, which is fine.
 
 ```r
 auto <- auto[price < 50000 & price > 100]
@@ -166,7 +163,7 @@ The production year for the reliability data is between 2002 and 2015 therefore 
 auto <- auto[yearOfRegistration >= 2002 & yearOfRegistration <= 2015]
 ```
 
-Now we come to some cleaning in the brand and model names. Some of these are pure substitutions, some are substitutions depending on what information is stored in the variables. There are also several examples of German wording that is removed, and not given English wording, to make it easier to read and match with the other data sets. An example would be "BMW 5er", which in English would be a BMW 5-series. This will now be referred to as simply "BMW 5".
+Now we come to some cleaning in the brand and model names. Some of these are pure substitutions, some are substitutions depending on what information is stored in the variables. There are also several examples of German wording that is removed, and not given English wording, to make it easier to read and match with the other data sets. An example would be "BMW 5er", which in English would be a BMW 5-series. This will now be referred to as simply "BMW 5". I chose this naming convention to make it easy to remember and match across the three different data sets. Often the headline of the ad has more information on the specific car model ("BMW 520d Touring edition", for example).
 
 ```r
 auto$brand <- ifelse(auto$brand == 'mercedes_benz', 'mercedes', auto$brand)
@@ -185,7 +182,7 @@ auto$model <- sub('mx', 'mx-5',   auto$model)
 auto$model <- sub(' max', '-max', auto$model)
 ```
 
-Then there are some pure translations. Some of the wording here is chosen to make it as ubiquitous as possible. Note in particular the "mini-van" category, that includes mini-busses, a naming convention that may not be used in some countries.
+Then there are some pure translations. Some of the wording here is chosen to make it as ubiquitous as possible. Note in particular the "mini-van" category, that includes mini-busses, a naming convention that may not be used in some regions. Also note that "limousine" does not translate to limousine. :)
 
 ```r
 auto$notRepairedDamage <- sub('ja', 'yes',  auto$notRepairedDamage)
@@ -266,7 +263,7 @@ rel$brand <- tolower(rel$brand)
 rel$model <- tolower(rel$model)
 ```
 
-Next up is cleaning the brand and model names. Alfa Romeo, Mercedes Benz and the different Mini versions needs to be corrected. Mini is in this data set referred to as BMW Mini. While this is technically correct, I will be considering Mini as its own brand.
+Next up is cleaning the brand and model names. Alfa Romeo, Mercedes Benz and the different Mini versions needs to be corrected. Mini is in this data set referred to as BMW Mini. While that is technically correct, I will be considering Mini as its own brand.
 
 ```r
 rel$brand <- ifelse(rel$brand == 'mercedes', 'mercedes benz', rel$brand)
@@ -292,7 +289,7 @@ A car produced in 2014, will be in the "2-3 year old cars"-category in both 2016
 
 The downside to creating these means is twofold. Firstly, the original data is changed. Ideally I would like to have avoided this. But in this case I believe the benefit outweighs the downside of doing it. Secondly, if you look at how fault rates are represented across the different report years, you'll see that the same problem is still present, only this time it is across report years instead of vehicle production years. The fault rate for a 2014 car in the 2016 and 2017 reports are identical after the transformation. This is not an issue for my particular project, as I'm not concerned with comparing reports from different years. If you want to search for the fault rate for a car, you'll want the newest report, not how different reports historically have evaluated it differently.
 
-We'll start with creating the means for the fault rates. Here the data is transformed so that each report year is a separate column. This is done twice to remove rows that only contains NA-values. This in effect compresses the data set by quite a bit.
+We'll start with creating the means for the fault rates. Here the data is transformed so that each report year is a separate column. This is done twice to remove rows that only contains NA-values in the year-columns for the fault rate. This in effect compresses the data set by quite a bit.
 
 ```r
 rel_fr <- rel %>%
@@ -481,7 +478,7 @@ crash$model_y <- sub('\\(Citroen C1,Peugeot 108 ', '', crash$model_y)
 crash$model_y <- sub('Doppelkabine ', '', crash$model_y)
 ```
 
-All dates for the model years are now cleaned. However, they are still in two different formats; "YYYY - YYYY" and "from YYYY" (presumably all the way until today). To make this a little easier to read for R, all "from year"-values are converted to a start-year and end-year. The end-year is set to be 2017 for all entries.
+All dates for the model years are now cleaned. However, they are still in two different formats; "YYYY - YYYY" and "from YYYY" (presumably all the way until today). To make this a little easier to read for R, all "from year"-values are converted to a "YYYY - YYYY"-format. The end-year is set to be 2017 for all entries.
 
 ```r
 crash$model_y <- ifelse(crash$model_y == 'ab 2017', '2017', crash$model_y)
@@ -563,7 +560,7 @@ summary(auto)
 
 ```
 
-The price seems to be centered around the lower prices, with the 3rd quartile being listed at 11 000 EUR. Let's take look at how the prices are distributed.
+The price seems to be centered around the lower prices, with the 3rd quartile being listed at about 12 000 EUR. Let's take look at how the prices are distributed.
 
 ```r
 hist(auto$price)
@@ -588,7 +585,7 @@ ggplot(auto, aes(kilometer)) +
 
 ![ggplot auto aes kilometer](https://user-images.githubusercontent.com/26480394/27180905-9bf885f8-51d5-11e7-98ec-04cde41c3c15.png)
 
-It seems like the kilometer variable is in bins, which means kilometers is rounded to some numbers. Two - there is an incredibly high number of cars that have registered with 150 000 kilometers compared to the other bins. This is likely because the data is truncated, that is, values over 150 000 km is combined with those in the 150 000 km group.
+It seems like the kilometer variable is in bins, which means kilometers is rounded to some numbers. There is also an incredibly high number of cars that have registered with 150 000 kilometers compared to the other bins. This is likely because the data is truncated, that is, values over 150 000 km is combined with those in the 150 000 km group.
 
 To be absolutely certain there is binning in the kilometer data, let's find the unique kilometer values.
 
@@ -608,7 +605,6 @@ hist(auto$yearOfRegistration[auto$kilometer == 150000])
 ![Histogram of registration year for cars that have driven 150 000 km](https://user-images.githubusercontent.com/26480394/27181078-47f7d8a4-51d6-11e7-9ce8-4b81de6d3a88.png)
 
 We can see that among the cars that have registered 150 000 km, most of them are older, with fewer and fewer cars that have driven that far for each year we get closer to 2017.
-
 
 Let's now look at the different car types - how are they different?
 
@@ -669,7 +665,7 @@ mitsubishi     nissan       opel    peugeot    porsche    renault       seat    
         50         32        152        322        616        141
 ```
 
-How does the fault rate vary across the different brands? Note that here the data is almost always paired (because of the means created earlier), but the
+How does the fault rate vary across the different brands?
 
 ```r
 ggplot(rel, aes(car_age, fault_rate, col = brand), legend = FALSE) +
@@ -695,7 +691,7 @@ ggplot(rel, aes(mileage/1000, fault_rate, col = brand), legend = FALSE) +
 
 ![plot mileage fault rate brand](https://user-images.githubusercontent.com/26480394/27182033-2c15e4e2-51da-11e7-956a-65a6a9d4f18f.png)
 
-Now we see part of the reason why Porsche does so well - it appears that they aren't driven as far as a lot of  the other brands. Porsches are luxury cars after all, it makes sense that they are driven less. But Mini still compares poorly against the Japanese brands, for instance. Could it be that the nationality of the cars are an important factor?
+Now we see part of the reason why Porsche does so well - it appears that they aren't driven as far as a lot of  the other brands. Porsches is a luxury brand after all, it makes sense that they are driven less. But Mini still compares poorly against the Japanese brands, for instance. Could it be that the nationality of the cars are an important factor?
 
 ```r
 ggplot(rel, aes(car_age, fault_rate, col = nationality), legend = FALSE) +
@@ -769,11 +765,11 @@ Here is the stars-rating plotted against the middle of the production run of eac
 # Machine learning
 ## Regressions
 
-After looking at the data in the previous section, it would be interesting to find some rule-of-thumb numbers from all this data, so that we have an idea of how the different variables effect the fault rate. These are not meant to be perfectly accurate, nor representative of the whole population of cars. They are merely a way of answering a question we haven't been able to answer so far - how is the fault rate dependent on both the mileage and the age of the car? We've seen how it is changing according to age and mileage separately, but that is of course not the whole pictures. All cars age, and almost all cars are also driven some distance each year. If we assume that only these two variables can explain the fault rate, how much do each of them change the fault rate?
+After looking at the data in the previous section, it would be interesting to find some rule-of-thumb numbers from all this data, so that we have an idea of how the different variables effect the fault rate. These are not meant to be perfectly accurate, nor representative of the whole population of cars. They are merely a way of answering a question we haven't been able to answer so far - how is the fault rate dependent on both the mileage and the age of the car? We've seen how it is changing according to age and mileage separately, but that is of course not the whole picture. All cars age, and almost all cars are also driven some distance each year. If we assume that only these two variables can explain the fault rate, how much do each of them change the fault rate?
 
 ```r
-model2 <- lm(fault_rate ~ mileage + car_age, data = rel)
-summary(model2)
+reg_fault_rate <- lm(fault_rate ~ mileage + car_age, data = rel)
+summary(reg_fault_rate)
 
 Call:
 lm(formula = fault_rate ~ mileage + car_age, data = rel)
@@ -864,7 +860,7 @@ If a car is five years old, has driven 70 000 km, has automatic transmission and
 
 According to this regression, we would expect the price to be about 15 400 EUR.
 
-Again we can create some rule-of-thumb numbers when thinking about the prices of the cars in this data set. For instance, each year a car get older, you'll lose about 1000 EUR in the selling price. Every 10 000 km the car drives is expected to devalue the car by about 330 EUR. These numbers must be used with caution, or else you may end up thinking that a brand new car, with automatic transmission and 0 PS is worth 14 780 EUR - which doesn't make any sense.
+Again we can create some rule-of-thumb numbers when thinking about the prices of the cars in this data set. For instance, each year a car get older, you'll lose about 1000 EUR in selling price. Every 10 000 km the car drives is expected to devalue the car by about 330 EUR. These numbers must be used with caution, or else you may end up thinking that a brand new car, with automatic transmission and 0 PS is worth 14 780 EUR - which doesn't make any sense.
 
 I think it's also worth pointing out that we don't know if the example car with 70 000 km is a Porsche or a Fiat. Knowing this would certainly change the price. We also don't know if it has unrepaired damage, if it has upgraded leather seats or what the service history is like. These are just estimations based on a large set of aggregated data, hence my insistence on thinking of this as more rule-of-thumb numbers.
 
@@ -878,7 +874,7 @@ setDT(auto)
 auto <- auto[model_y_start < yearOfRegistration & yearOfRegistration <= model_y_end]
 ```
 
-Then the reliability data set is joined as well. To cut out the duplicate lines, car production year and registration year has to be the same. In addition, I've set the report year to 2017 to avoid duplicates from previous reports.
+Then the reliability data set is joined as well. To cut out the duplicate lines, car production year and registration year has to be the same. In addition, I've set the report year to 2017 to avoid duplicates from previous reports. This is a cheeky assumption, because it cuts out some useful information where the newest report is from 2016 and older. I'll explain more about this in the "discussion" portion further down.
 
 ```r
 auto <- left_join(auto, rel)
@@ -886,7 +882,7 @@ setDT(auto)
 auto <- auto[car_prod_y == yearOfRegistration & report_year == 2017]
 ```
 
-At the end here, we do a little bit of cleaning up, and rename the average mileage column to avoid confusion with the kilomter column.
+At the end, we do a little bit of cleaning up, and rename the average mileage column to avoid confusion with the kilometer column.
 
 ```r
 auto$brand       <- as.factor(auto$brand)
@@ -902,7 +898,7 @@ auto$model_y_end <- NULL
 colnames(auto)[15] <- "avg_mileage"
 ```
 
-As a final variable created from the difference between mileages in the ads and what was the average reported mileages for the cars were. This could help us see if a car has driven much more or much less than the average car of that production year, brand and model.
+A final variable is created from the difference between mileages in the ads and what was the average reported mileages for the cars were. This could help us see if a car has driven much more or much less than the average car of that production year, brand and model.
 
 ```r
 auto$com_mean_km <- auto$kilometer - auto$mileage
@@ -960,3 +956,19 @@ search_results <- search_results[order(com_mean_km)]
 |Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Design_Edition           |  8499|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
 |Opel_Astra_1.7_CDTI_DPF_Sports_Tourer                          |  9650|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
 ```
+
+This gives us much more information than if we had just searched for station wagons with no unrepaired damages between 500 EUR and 10 000 EUR. We can see that there are no large differences in fault rates, but there are rather large differences between the average mileage and the mileage from the ads. The car at the top of the search results seem like a very interesting car, as it has driven only about half as much as the average car of that brand, model and production year.
+
+Towards the bottom of the list we see all the cars that have 150 000 km listed as mileage. The sheer number of these, and the fact that the mileage variable is truncated, makes me think the highest mileage is much higher than 150 000 km.
+
+# Discussion
+
+During all the data wrangling in this project, a few questions came up that I thought I would address here. I'd also like to point out some areas for further exploration.
+
+There are several places where I've made choices that cuts down on the amount of data, particularly in the auto data set. As I started with more than 371 000 ads, this was not a problem, but it would be interesting to see how many could be used in the final search. A lot of the car models could with meticulous work be matched in the three data sets. However, this would require a lot of time, as I'm not sure using regular expressions would be a simple fix for this. There are so many different model names, some similar and some not. As my time on this project was limited, I have not spent a lot of time matching model names, but this could be done in a future project. Another area that could increase the data available for the final search is a refinement that finds the latest available report year, even if that is from an older report.
+
+There are also a lot of possibilities in expanding on the regressions. One might wonder if it could be possible to say something about the expected changes in price in the future for a car you are looking to buy today, for instance. Let's say you want to buy a family car today, but you only need it for four years. Wouldn't it be interesting to know what you could be expected to get for it after those four years? Such a calculator could then even advice you whether or not you should lease a car instead of buying one.
+
+If you were looking at a an older car (12 years old +), the newest reliability report doesn't have data for that car. But what if one could look into predictions of what the current fault rate is, even though this is not available. What if the last fault rate of a car you were interested in was recorded in 2010, and you wanted some estimation on what the fault rate might be today? That could be interesting to look into.
+
+Broadly speaking, I have only looked at car brands and models. But there are sometimes a plethora of different cars within the same model. Perhaps one could use the headlines from the ads to mine out some more information about the cars, which could then be used to classify them at a more granular level. This could potentially save some of the data that was shaved off when the lowest common denominator for the three data sets were determined.
