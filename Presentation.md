@@ -868,7 +868,7 @@ Again we can create some rule-of-thumb numbers when thinking about the prices of
 
 I think it's also worth pointing out that we don't know if the example car with 70 000 km is a Porsche or a Fiat. Knowing this would certainly change the price. We also don't know if it has unrepaired damage, if it has upgraded leather seats or what the service history is like. These are just estimations based on a large set of aggregated data, hence my insistence on thinking of this as more rule-of-thumb numbers.
 
-# combining the three data sets
+# Combining the three data sets
 
 First we join the auto and crash data sets. This is done with a left_join, which will make any matches on the auto data set with the potential many matches on the crash data set a separate line. This in effect doubles the data set. A very common example is where there are several crash tests for different production years of the same car. Therefore, a line is added so that only the matches where the registration year of the car is within the production run of that car is kept.
 
@@ -907,6 +907,8 @@ As a final variable created from the difference between mileages in the ads and 
 ```r
 auto$com_mean_km <- auto$kilometer - auto$mileage
 ```
+
+# Creating the search results
 
 And finally, we can create a search. Heres what I've searched for:
 * Only cars with a 5-star crash safety rating.
