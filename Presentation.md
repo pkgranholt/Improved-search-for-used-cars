@@ -1,5 +1,3 @@
-# Capstone project
-
 # Introduction
 
 The idea for this capstone project came from a situation I had a few years ago when I was buying a used car. I spent a lot of time researching, finding the best car according to several criteria, among them safety and reliability. This information was available online, but it annoyed me that the web site I was using to search for cars didn’t have this information readily available. It was therefore a time-consuming process of finding certain brands and models that was suitable, and looking these up. This project aims to solve that problem, by attaching crash test data and reliability data to a large data set with used cars ads.
@@ -821,6 +819,38 @@ If a car is five years old, and it has driven 70 000 km, we would expect the fau
 
 The rule-of-thumb we can read from this regression is that when both mileage and age is accounted for, the fault rate is expected to go up by just over 5% for every 100 000 km the car drives, and almost 12% every five years (and remember to subtract one percentage point if you want to calculate a fault rate for a specific combination of mileage and age).
 
+What happens if we try to include nationality as dummy variables? I'll focus on French, German and Japanses cars.
+
+```r
+reg_fault_rate_nat <- lm(fault_rate ~ mileage + car_age + fre + ger + jap, data = rel)
+summary(reg_fault_rate_nat)
+
+Call:
+lm(formula = fault_rate ~ mileage + car_age + fre + ger + jap,
+    data = rel)
+
+Residuals:
+     Min       1Q   Median       3Q      Max
+-16.1877  -2.9888  -0.2161   2.6953  19.3319
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  9.410e-01  1.721e-01   5.466 4.79e-08 ***
+mileage      5.816e-05  2.927e-06  19.868  < 2e-16 ***
+car_age      2.281e+00  3.522e-02  64.778  < 2e-16 ***
+fre          1.683e+00  1.830e-01   9.195  < 2e-16 ***
+ger         -3.907e+00  1.439e-01 -27.145  < 2e-16 ***
+jap         -4.719e+00  1.661e-01 -28.414  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 4.438 on 5915 degrees of freedom
+Multiple R-squared:  0.7811,	Adjusted R-squared:  0.781
+F-statistic:  4222 on 5 and 5915 DF,  p-value: < 2.2e-16
+```
+
+We see that not only are the three dummy variables all significant, they also show the same pattern that we observed in the exploratory analysis. The French cars in general have a higher fault rate, while both German and Japanese cars have a lower fault rate. The Japanese cars have the lowest fault rate according to this regression. The adjusted R-squared increased, which means this regression model explains more of the variation in the data set than the first regression.
+
 What about price? Can we create some estimation on how the different variables in our auto data set effects price? First the car age is created as a variable in the auto data set, then a linear regression is run with price as the dependent variable, and car age, gearbox, PS and mileage as the independent variables.
 
 ```r
@@ -874,7 +904,44 @@ According to this regression, we would expect the price to be about 15 400 EUR.
 
 Again we can create some rule-of-thumb numbers when thinking about the prices of the cars in this data set. For instance, each year a car get older, you'll lose about 1000 EUR in selling price. Every 10 000 km the car drives is expected to devalue the car by about 330 EUR. These numbers must be used with caution, or else you may end up thinking that a brand new car, with automatic transmission and 0 PS is worth 14 780 EUR - which doesn't make any sense.
 
-I think it's also worth pointing out that we don't know if the example car with 70 000 km is a Porsche or a Fiat. Knowing this would certainly change the price. We also don't know if it has unrepaired damage, if it has upgraded leather seats or what the service history is like. These are just estimations based on a large set of aggregated data, hence my insistence on thinking of this as more rule-of-thumb numbers.
+What happens if we also include nationality of the cars as a variable?
+
+```r
+
+reg_price_nat <- lm(price ~ car_age + gearbox + powerPS + kilometer + fre + ger + jap, data = auto)
+summary(reg_price_nat)
+
+Call:
+lm(formula = price ~ car_age + gearbox + powerPS + kilometer +
+    fre + ger + jap, data = auto)
+
+Residuals:
+   Min     1Q Median     3Q    Max
+-48928  -2143   -244   1725  36067
+
+Coefficients:
+                Estimate Std. Error  t value Pr(>|t|)    
+(Intercept)    1.428e+04  5.013e+01  284.834  < 2e-16 ***
+car_age       -9.922e+02  3.731e+00 -265.907  < 2e-16 ***
+gearboxmanual -1.129e+03  2.528e+01  -44.658  < 2e-16 ***
+powerPS        5.944e+01  1.881e-01  316.007  < 2e-16 ***
+kilometer     -3.539e-02  3.017e-04 -117.306  < 2e-16 ***
+fre           -2.772e+02  3.825e+01   -7.247 4.28e-13 ***
+ger            1.887e+03  2.488e+01   75.846  < 2e-16 ***
+jap            1.387e+02  4.317e+01    3.213  0.00131 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3908 on 158987 degrees of freedom
+Multiple R-squared:  0.7315,	Adjusted R-squared:  0.7315
+F-statistic: 6.189e+04 on 7 and 158987 DF,  p-value: < 2.2e-16
+```
+
+Yet again all the variables are significant, although the dummy variable for Japanese cars is less significant than the rest. The coefficient is also smaller, which indicates that Japanese cars don't have a high premium in Germany. We can also see that there is a rather large difference between the estimated price of a French and a German car (around 2000 EUR), even if all the other variables are identical. This is a large difference, but I guess it goes to show that Germans prefer German cars, and are willing to pay more for them.
+
+We can see that the adjusted R-squared barely increased. This tells us that while these variables do explain a little more than before, the added explanatory power was small.
+
+I think it's worth pointing out that these regressions only explain what we allow them to explain. If we ask the model to explain fault rate by mileage and age, it won't be able to explain the fault rate in any other way, even if there was a great variable that was excluded from the regression. For instance, we don't know if the cars have unrepaired damage or upgraded leather seats or what the service history is like. These are just estimations based on a large set of aggregated data.
 
 # Combining the three data sets
 
