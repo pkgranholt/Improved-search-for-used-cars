@@ -124,6 +124,20 @@ auto$notRepairedDamage <- as.factor(auto$notRepairedDamage)
 auto$brand             <- as.factor(auto$brand)
 auto$model             <- as.factor(auto$model)
 
+# adding nationality as dummy avariables for the regressions
+
+auto$ger <- ifelse(auto$brand == 'audi'    | auto$brand == 'bmw'     | auto$brand == 'mercedes' |
+                   auto$brand == 'opel'    | auto$brand == 'porsche' | auto$brand == 'volkswagen',
+                   1, 0)
+
+auto$fre <- ifelse(auto$brand == 'citroen' | auto$brand == 'peugeot' | auto$brand == 'renault',
+                   1, 0)
+
+auto$jap <- ifelse(auto$brand == 'honda'   | auto$brand == 'mazda'   | auto$brand == 'mitsubishi' |
+                   auto$brand == 'nissan'  | auto$brand == 'subaru'  | auto$brand == 'suzuki' |
+                   auto$brand == 'toyota',
+                   1, 0)
+
 
 
 
@@ -261,6 +275,19 @@ rel$brand       <- as.factor(rel$brand)
 rel$model       <- as.factor(rel$model)
 rel$nationality <- as.factor(rel$nationality)
 
+# adding nationality as dummy avariables for the regressions
+
+rel$ger <- ifelse(rel$brand == 'audi'    | rel$brand == 'bmw'     | rel$brand == 'mercedes' |
+                   rel$brand == 'opel'    | rel$brand == 'porsche' | rel$brand == 'volkswagen',
+                   1, 0)
+
+rel$fre <- ifelse(rel$brand == 'citroen' | rel$brand == 'peugeot' | rel$brand == 'renault',
+                   1, 0)
+
+rel$jap <- ifelse(rel$brand == 'honda'   | rel$brand == 'mazda'   | rel$brand == 'mitsubishi' |
+                  rel$brand == 'nissan'  | rel$brand == 'subaru'  | rel$brand == 'suzuki' |
+                  rel$brand == 'toyota',
+                   1, 0)
 
 
 
@@ -384,22 +411,28 @@ library(ggplot2)
 summary(auto)
 
 # let's take a look at the price variable
-hist(auto$price)
+ggplot(auto, aes(price)) +
+  geom_histogram(fill = "blue")
 
 # let's take a look at the kilometer variable
-hist(auto$kilometer)
-
 ggplot(auto, aes(kilometer)) +
-  geom_density(fill = "lightcyan")
+  geom_histogram(fill = "blue")
 
 table(auto$kilometer)
 
-hist(auto$yearOfRegistration[auto$kilometer == 150000])
+driven_150000km  <- auto$yearOfRegistration[auto$kilometer == 150000]
+driven_auto <- subset(auto, auto$kilometer == 150000)
+
+ggplot(driven_auto, aes(driven_150000km)) +
+  geom_histogram(fill = "blue", bins = 10)
 
 ggplot(auto, aes(price, yearOfRegistration, col = vehicleType)) +
   geom_point(alpha = 0.01) +
   geom_smooth(se = TRUE) +
   facet_wrap(~vehicleType)
+
+rm(driven_150000km)
+rm(driven_auto)
 
 ##reliability data set
 summary(rel)
@@ -463,14 +496,29 @@ ggplot(crash, aes(stars, y_mean, col = nationality), legend = FALSE) +
 
 
 ### machine learning ###
+
 reg_fault_rate <- lm(fault_rate ~ mileage + car_age, data = rel)
 summary(reg_fault_rate)
 
+reg_fault_rate_nat <- lm(fault_rate ~ mileage + car_age + fre + ger + jap, data = rel)
+summary(reg_fault_rate_nat)
+
 auto$car_age <- 2017 - auto$yearOfRegistration
+
 reg_price <- lm(price ~ car_age + gearbox + powerPS + kilometer, data = auto)
 summary(reg_price)
 
+reg_price_nat <- lm(price ~ car_age + gearbox + powerPS + kilometer + fre + ger + jap, data = auto)
+summary(reg_price_nat)
 
+auto$fre     <- NULL
+auto$ger     <- NULL
+auto$jap     <- NULL
+auto$car_age <- NULL
+rel$fre      <- NULL
+rel$ger      <- NULL
+rel$jap      <- NULL
+rel$car_age  <- NULL
 
 
 
@@ -488,22 +536,52 @@ auto$brand       <- as.factor(auto$brand)
 auto$model       <- as.factor(auto$model)
 auto$nationality <- as.factor(auto$nationality)
 
-auto$car_age     <- NULL
 auto$report_year <- NULL
 auto$car_prod_y  <- NULL
 auto$nationality <- NULL
 auto$model_y_end <- NULL
 
+
 colnames(auto)[16] <- "avg_mileage"
 
 # creating a variable that compares the average mileage for that car, with what is for sale
-auto$com_mean_km <- auto$kilometer - auto$mileage
+auto$actual_mean_km <- auto$kilometer - auto$avg_mileage
 
 ## creating a search
 search_results <- auto[stars == 5 & price <= 10000 & price > 500 & fault_rate < 10 & vehicleType == 'station wagon' & notRepairedDamage == 'no']
-search_results <- search_results[order(com_mean_km)]
+search_results <- search_results[order(actual_mean_km)]
 
 # creating a table for Markdown
 library(knitr)
 kable(search_results)
 
+
+
+# creating the search function with default arguments
+
+search <- function(lower_price = 0, upper_price = 50000, vehicle_type = NULL,
+                      brand = NULL, model = NULL, lower_power = 0, upper_power = 900,
+                      lower_km = 0, upper_km = 150000, lower_safety = 1,
+                      upper_safety = 5, lower_reliability = 0
+                      ){
+  if (is.null(vehicle_type)) {
+    vehicle_type <- levels(auto$vehicleType)
+  if (is.null(brand)) {
+    brand <- levels(auto$brand)
+  if (is.null(model)) {
+    model <- levels(auto$model)
+    }}}
+    subset_data =  auto[price          > lower_price       &
+                        price         <= upper_price       &
+                        vehicleType %in% vehicle_type      &
+                        brand       %in% brand             &
+                        model       %in% model             &
+                        powerPS        > lower_power       &
+                        powerPS       <= upper_power       &
+                        kilometer      > lower_km          &
+                        kilometer     <= upper_km          &
+                        stars          > lower_safety      &
+                        stars         <= upper_safety      &
+                        fault_rate     > lower_reliability ]
+    return(subset_data)}
+search(brand = 'bmw')
