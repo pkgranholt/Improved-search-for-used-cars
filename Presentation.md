@@ -565,27 +565,20 @@ summary(auto)
 The price seems to be centered around the lower prices, with the 3rd quartile being listed at about 12 000 EUR. Let's take look at how the prices are distributed.
 
 ```r
-hist(auto$price)
+ggplot(auto, aes(price)) +
+  geom_histogram(fill = "blue")
 ```
 
-![Histogram of price in the auto data set](https://user-images.githubusercontent.com/26480394/27180592-78ab19f4-51d4-11e7-904b-bf489ab57c0a.png)
+![Histogram of price in the auto data set](https://user-images.githubusercontent.com/26480394/27425383-86c3290a-5738-11e7-8144-9044db387693.png)
 
-The plot confirms that the majority of cars are below 10 000 EUR, and that there are gradually fewer and fewer cars with higher prices. Let's now look at the mileage of the cars.
-
-```r
-hist(auto$kilometer)
-```
-
-![Histogram of kilometers in the auto data set](https://user-images.githubusercontent.com/26480394/27180709-f7e8b212-51d4-11e7-8c62-e997d79e236e.png)
-
-There seems to be something strange going on with the variable. To look at bit more closely, let's try a density plot.
+The plot confirms that the majority of cars are on the lower end of the scale, and that there are gradually fewer and fewer cars with higher prices. Let's now look at the mileage of the cars.
 
 ```r
 ggplot(auto, aes(kilometer)) +
-  geom_density(fill = "lightcyan")
+  geom_histogram(fill = "blue")
 ```
 
-![ggplot auto aes kilometer](https://user-images.githubusercontent.com/26480394/27180905-9bf885f8-51d5-11e7-98ec-04cde41c3c15.png)
+![Histogram of kilometers in the auto data set](https://user-images.githubusercontent.com/26480394/27425427-b068a24e-5738-11e7-8be6-3e994debf02b.png)
 
 It seems like the kilometer variable is in bins, which means kilometers is rounded to some numbers. There is also an incredibly high number of cars that have registered with 150 000 kilometers compared to the other bins. This is likely because the data is truncated, that is, values over 150 000 km is combined with those in the 150 000 km group.
 
@@ -601,7 +594,11 @@ table(auto$kilometer)
 This confirms that the kilometer variable is saved in bins. I suspect that the high number of 150 000 km cars reflect that these are older cars. This makes sense since the car prices that are usually below 10 000 EUR. Let's confirm this now.
 
 ```r
-hist(auto$yearOfRegistration[auto$kilometer == 150000])
+driven_150000km  <- auto$yearOfRegistration[auto$kilometer == 150000]
+driven_auto <- subset(auto, auto$kilometer == 150000)
+
+ggplot(driven_auto, aes(driven_150000km)) +
+  geom_histogram(fill = "blue")
 ```
 
 ![Histogram of registration year for cars that have driven 150 000 km](https://user-images.githubusercontent.com/26480394/27181078-47f7d8a4-51d6-11e7-9ce8-4b81de6d3a88.png)
