@@ -598,10 +598,10 @@ driven_150000km  <- auto$yearOfRegistration[auto$kilometer == 150000]
 driven_auto <- subset(auto, auto$kilometer == 150000)
 
 ggplot(driven_auto, aes(driven_150000km)) +
-  geom_histogram(fill = "blue")
+  geom_histogram(fill = "blue", bins = 10)
 ```
 
-![Histogram of registration year for cars that have driven 150 000 km](https://user-images.githubusercontent.com/26480394/27181078-47f7d8a4-51d6-11e7-9ce8-4b81de6d3a88.png)
+![Histogram of registration year for cars that have driven 150 000 km](https://user-images.githubusercontent.com/26480394/27426021-90512b82-573a-11e7-87f7-c0ef19689f23.png)
 
 We can see that among the cars that have registered 150 000 km, most of them are older, with fewer and fewer cars that have driven that far for each year we get closer to 2017.
 
@@ -984,3 +984,4 @@ There are also a lot of possibilities in expanding on the regressions. One might
 If you were looking at a an older car (12 years old +), the newest reliability report doesn't have data for that car. But what if one could look into predictions of what the current fault rate is, even though this is not available. What if the last fault rate of a car you were interested in was recorded in 2010, and you wanted some estimation on what the fault rate might be today? That could be interesting to look into.
 
 In the car data, I have primarily looked at car brands and models. But there are sometimes a plethora of different cars within the same model. Perhaps one could use the headlines from the ads to mine out some more information about the cars, which could then be used to classify them at a more granular level. This could potentially save some of the data that was shaved off when the lowest common denominator for the three data sets were determined.
+
