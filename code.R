@@ -557,31 +557,40 @@ kable(search_results)
 
 
 
-# creating the search function with default arguments
+
+# creating the search function
 
 search <- function(lower_price = 0, upper_price = 50000, vehicle_type = NULL,
-                      brand = NULL, model = NULL, lower_power = 0, upper_power = 900,
-                      lower_km = 0, upper_km = 150000, lower_safety = 1,
-                      upper_safety = 5, lower_reliability = 0
-                      ){
+                   brand_name = NULL, model_name = NULL, lower_power = 0,
+                   upper_power = 900, lower_km = 0, upper_km = 150000,
+                   lower_safety = 1, upper_safety = 5, upper_reliability = 50,
+                   damaged = NULL){
   if (is.null(vehicle_type)) {
-    vehicle_type <- levels(auto$vehicleType)
-  if (is.null(brand)) {
-    brand <- levels(auto$brand)
-  if (is.null(model)) {
-    model <- levels(auto$model)
-    }}}
-    subset_data =  auto[price          > lower_price       &
-                        price         <= upper_price       &
-                        vehicleType %in% vehicle_type      &
-                        brand       %in% brand             &
-                        model       %in% model             &
-                        powerPS        > lower_power       &
-                        powerPS       <= upper_power       &
-                        kilometer      > lower_km          &
-                        kilometer     <= upper_km          &
-                        stars          > lower_safety      &
-                        stars         <= upper_safety      &
-                        fault_rate     > lower_reliability ]
-    return(subset_data)}
-search(brand = 'bmw')
+    vehicle_type <- levels(auto$vehicleType)}
+  if (is.null(brand_name)) {
+    brand_name <- levels(auto$brand)}
+  if (is.null(model_name)) {
+    model_name <- levels(auto$model)}
+  if (is.null(damaged)) {
+    damaged <- levels(auto$notRepairedDamage)}
+  subset_data =  auto[price               >= lower_price       &
+                      price               <= upper_price       &
+                      vehicleType       %in% vehicle_type      &
+                      brand             %in% brand_name        &
+                      model             %in% model_name        &
+                      notRepairedDamage %in% damaged           &
+                      powerPS             >= lower_power       &
+                      powerPS             <= upper_power       &
+                      kilometer           >= lower_km          &
+                      kilometer           <= upper_km          &
+                      stars               >= lower_safety      &
+                      stars               <= upper_safety      &
+                      fault_rate          <= upper_reliability ]
+  return(subset_data)}
+
+# creating a search using the search function
+
+search_results <- search(lower_safety = 5, upper_reliability = 10, upper_price = 10000,
+                         lower_price = 500, vehicle_type = 'station wagon', damaged = 'no')
+search_results <- search_results[order(actual_mean_km)]
+
