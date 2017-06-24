@@ -1024,13 +1024,15 @@ Here's a search example:
 * Price above 500 EUR (to avoid cars for lease).
 * A station wagon.
 * A car with no unrepaired damage.
-* In addition, I've sorted the cars so that those that have been driven less than the average is at the top.
+* In addition, I've sorted the cars so that those that have been driven less than the average are at the top.
 
 ```r
 search_results <- search(lower_safety = 5, upper_reliability = 10, upper_price = 10000,
                          lower_price = 500, vehicle_type = 'station wagon', damaged = 'no')
 search_results <- search_results[order(actual_mean_km)]
 ```
+
+The results are shown below.
 
 ```
 |name                                                           | price|vehicleType   | yearOfRegistration|gearbox   | powerPS|model    | kilometer|fuelType            |brand      |notRepairedDamage | stars| model_y_start| y_mean| fault_rate| avg_mileage| actual_mean_km|
