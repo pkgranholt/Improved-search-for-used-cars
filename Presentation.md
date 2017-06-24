@@ -1019,7 +1019,7 @@ search <- function(lower_price = 0, upper_price = 50000, vehicle_type = NULL,
 
 Here's a search example:
 * Only cars with a 5-star crash safety rating.
-* Fault rate below 10% for 2017.
+* Fault rate below 10%.
 * Price below 10 000 EUR.
 * Price above 500 EUR (to avoid cars for lease).
 * A station wagon.
