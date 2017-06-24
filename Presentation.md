@@ -10,7 +10,7 @@ A big thanks to my advisor for this project, Branko Kovac!
 
 There are three sources for this project:  
 
-1. [Ebay-Klenanzeigen](https://www.kaggle.com/orgesleka/used-cars-database) is a scraping of the German version of Ebay with about 371 000 cars for sale. This will be used as the basis for the search recommendations.
+1. [Ebay-Kleinanzeigen](https://www.kaggle.com/orgesleka/used-cars-database) is a scraping of the German version of Ebay with about 371 000 cars for sale. This will be used as the basis for the search recommendations.
 
 The biggest challenge with this data is the size. There are many listings, but not all are relevant. One of the challenges is filtering out the listings that have information that is not meant to be searchable. For instance, quite a few cars have exorbitant prices, that when you read the text in the listing, are there to symbolize that the owner wants to trade the car for another car. This type of information needs to be cleaned or removed for the search parameters to be meaningful.
 
