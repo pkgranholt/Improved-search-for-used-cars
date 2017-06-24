@@ -1023,7 +1023,7 @@ Here's a search example:
 * Price below 10 000 EUR.
 * Price above 500 EUR (to avoid cars for lease).
 * A station wagon.
-* A car that has no unrepaired damages.
+* A car with no unrepaired damage.
 * In addition, I've sorted the cars so that those that have been driven less than the average is at the top.
 
 ```r
