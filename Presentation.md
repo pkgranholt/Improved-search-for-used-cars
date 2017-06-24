@@ -974,18 +974,50 @@ auto$car_prod_y  <- NULL
 auto$nationality <- NULL
 auto$model_y_end <- NULL
 
-colnames(auto)[15] <- "avg_mileage"
+colnames(auto)[16] <- "avg_mileage"
 ```
 
 A final variable is created from the difference between mileages in the ads and what was the average reported mileages for the cars were. This could help us see if a car has driven much more or much less than the average car of that production year, brand and model.
 
 ```r
-auto$com_mean_km <- auto$kilometer - auto$mileage
+auto$actual_mean_km <- auto$kilometer - auto$avg_mileage
 ```
 
-# Creating the search results
+# Creating the search function
 
-And finally, we can create a search. Heres what I've searched for:
+At last, it's time for the search function. The function is created with default arguments so that if no arguments are specified, all cars are returned. If only a few arguments are specified, the rest of the arguments will include all cars (just like a regular filter search). The arguments can be in any order.
+
+```r
+search <- function(lower_price = 0, upper_price = 50000, vehicle_type = NULL,
+                   brand_name = NULL, model_name = NULL, lower_power = 0,
+                   upper_power = 900, lower_km = 0, upper_km = 150000,
+                   lower_safety = 1, upper_safety = 5, upper_reliability = 50,
+                   damaged = NULL){
+  if (is.null(vehicle_type)) {
+    vehicle_type <- levels(auto$vehicleType)}
+  if (is.null(brand_name)) {
+    brand_name <- levels(auto$brand)}
+  if (is.null(model_name)) {
+    model_name <- levels(auto$model)}
+  if (is.null(damaged)) {
+    damaged <- levels(auto$notRepairedDamage)}
+  subset_data =  auto[price               >= lower_price       &
+                      price               <= upper_price       &
+                      vehicleType       %in% vehicle_type      &
+                      brand             %in% brand_name        &
+                      model             %in% model_name        &
+                      notRepairedDamage %in% damaged           &
+                      powerPS             >= lower_power       &
+                      powerPS             <= upper_power       &
+                      kilometer           >= lower_km          &
+                      kilometer           <= upper_km          &
+                      stars               >= lower_safety      &
+                      stars               <= upper_safety      &
+                      fault_rate          <= upper_reliability ]
+  return(subset_data)}
+```
+
+Here's a search example:
 * Only cars with a 5-star crash safety rating.
 * Fault rate below 10% for 2017.
 * Price below 10 000 EUR.
@@ -995,45 +1027,46 @@ And finally, we can create a search. Heres what I've searched for:
 * In addition, I've sorted the cars so that those that have been driven less than the average is at the top.
 
 ```r
-search_results <- auto[stars == 5 & price <= 10000 & price > 500 & fault_rate < 10 & vehicleType == 'station wagon' & notRepairedDamage == 'no']
-search_results <- search_results[order(com_mean_km)]
+search_results <- search(lower_safety = 5, upper_reliability = 10, upper_price = 10000,
+                         lower_price = 500, vehicle_type = 'station wagon', damaged = 'no')
+search_results <- search_results[order(actual_mean_km)]
 ```
 
 ```
-|name                                                           | price|vehicleType   | yearOfRegistration|gearbox   | powerPS|model    | kilometer|fuelType            |brand      |notRepairedDamage | stars| model_y_start| fault_rate| avg_mileage| com_mean_km|
-|:--------------------------------------------------------------|-----:|:-------------|------------------:|:---------|-------:|:--------|---------:|:-------------------|:----------|:-----------------|-----:|-------------:|----------:|-----------:|-----------:|
-|BMW_520d_Touring_Aut._Navi_Prof.__Panorama__Head_Up            |  8000|station wagon |               2012|automatic |     184|5        |     50000|diesel              |bmw        |no                |     5|          2010|       9.20|       91500|      -41500|
-|Skoda_Roomster_Active_Plus_1.2                                 |  8500|station wagon |               2013|manual    |      70|roomster |     30000|petrol              |skoda      |no                |     5|          2006|       9.20|       65000|      -35000|
-|Opel_Astra_1.6_Sports_Tourer_150_Jahre_Opel                    |  9690|station wagon |               2012|manual    |     116|astra    |     60000|petrol              |opel       |no                |     5|          2009|       8.90|       63000|       -3000|
-|Renault_Clio_Grandtour_1.2_16V_75_Dynamique                    |  9790|station wagon |               2014|manual    |      73|clio     |     30000|petrol              |renault    |no                |     5|          2012|       8.05|       32500|       -2500|
-|Renault_Clio_Grandtour_1.2_16V_75_Dynamique                    |  9790|station wagon |               2014|manual    |      73|clio     |     30000|petrol              |renault    |no                |     5|          2012|       8.05|       32500|       -2500|
-|Renault_Clio_Grandtour_1.2_16V_75_Dynamique_TOP!               |  9790|station wagon |               2014|manual    |      73|clio     |     30000|petrol              |renault    |no                |     5|          2012|       8.05|       32500|       -2500|
-|Seat_Ibiza_ST_1.4_16V_Reference_Salsa                          |  8790|station wagon |               2014|manual    |      86|ibiza    |     40000|petrol              |seat       |no                |     5|          2008|       6.60|       39000|        1000|
-|Seat_Ibiza_ST_1.2_12V_Reference_4you                           |  9000|station wagon |               2014|manual    |      75|ibiza    |     40000|petrol              |seat       |no                |     5|          2008|       6.60|       39000|        1000|
-|Opel_Astra_J_Sports_Tourer_1.7_CDTI_EcoFlex                    |  9200|station wagon |               2012|manual    |     136|astra    |     80000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       17000|
-|Opel_Astra_1.3_CDTI_DPF_ecoFLEX_Sports_TourerStar...           |  8300|station wagon |               2012|manual    |      95|astra    |     90000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       27000|
-|Renault_Clio_Grandtour_Energy_dCi_90_Start_&_Stop_Dy...        |  9900|station wagon |               2014|manual    |      90|clio     |     60000|diesel              |renault    |no                |     5|          2012|       8.05|       32500|       27500|
-|Mercedes_Benz_Citan_aus_1._Hand__Scheckheft_bei_Mercedes_Benz  |  8990|station wagon |               2013|manual    |      90|c        |    125000|diesel              |mercedes   |no                |     5|          2007|       7.20|       82000|       43000|
-|Mercedes_Benz_Citan_aus_1._Hand__Scheckheft_bei_Mercedes_Benz  |  8990|station wagon |               2013|manual    |      90|c        |    125000|diesel              |mercedes   |no                |     5|          2011|       7.20|       82000|       43000|
-|Audi_A6_Avant_3.0_TDI_DPF_XENON_KAMERAInzahlungnahme           |  7999|station wagon |               2012|manual    |     204|a6       |    150000|diesel              |audi       |no                |     5|          2011|       7.00|      100500|       49500|
-|Audi_A4_Avant_/_Seat_Exeo_2.0_TDI_DPF                          |  9500|station wagon |               2012|manual    |     120|a4       |    150000|diesel              |audi       |no                |     5|          2007|       7.40|       93500|       56500|
-|BMW_530d_Touring_Aut.                                          |  9500|station wagon |               2012|automatic |     258|5        |    150000|diesel              |bmw        |no                |     5|          2010|       9.20|       91500|       58500|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer                          |  9250|station wagon |               2012|manual    |     110|astra    |    125000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       62000|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_150_Jahre_Opel           |  8500|station wagon |               2012|manual    |     110|astra    |    125000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       62000|
-|Audi_A6_Avant_2.0_TDI_DPF_multitronic_NAVI_FV23                |  8050|station wagon |               2013|automatic |     177|a6       |    150000|diesel              |audi       |no                |     5|          2011|       4.20|       88000|       62000|
-|Opel_Astra_LPG_Turbo_Sports_Tourer_150_Jahre_Edition           |  9990|station wagon |               2012|manual    |     140|astra    |    125000|liquefied petroleum |opel       |no                |     5|          2009|       8.90|       63000|       62000|
-|Opel_Astra_LPG_Turbo_Sports_Tourer_150_Jahre_Edition           |  9990|station wagon |               2012|manual    |     140|astra    |    125000|liquefied petroleum |opel       |no                |     5|          2009|       8.90|       63000|       62000|
-|Opel_Astra_2.0_CDTI_DPF_Sports_Tourer_Innovation               |  5300|station wagon |               2012|manual    |     121|astra    |    125000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       62000|
-|BMW_316d_DPF_Touring                                           |  9800|station wagon |               2012|manual    |     116|3        |    150000|diesel              |bmw        |no                |     5|          2005|       9.65|       86000|       64000|
-|Volkswagen_3BG                                                 |  2500|station wagon |               2014|manual    |     101|passat   |    150000|diesel              |volkswagen |no                |     5|          2010|       7.90|       84000|       66000|
-|FORD_GRAND_C_MAX_TITANIUM_2.0TDCI_AHK_TOP                      |  9800|station wagon |               2012|automatic |     140|c-max    |    150000|diesel              |ford       |no                |     5|          2010|       8.75|       67500|       82500|
-|Opel_Astra_Sports_Tourer_1_7_D_mit_Navigation                  |  7800|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Navi_Leder_Alu           |  6800|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_"1._HAND"                |  6800|station wagon |               2012|manual    |     131|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
-|Verkaufe__Opel_Astra_Diesel_Sportstouer___Top_Zustand          |  9900|station wagon |               2012|manual    |     165|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Edition_gute_Ausstattung |  7250|station wagon |               2012|manual    |     125|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Design_Edition           |  8499|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
-|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer                          |  9650|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009|       8.90|       63000|       87000|
+|name                                                           | price|vehicleType   | yearOfRegistration|gearbox   | powerPS|model    | kilometer|fuelType            |brand      |notRepairedDamage | stars| model_y_start| y_mean| fault_rate| avg_mileage| actual_mean_km|
+|:--------------------------------------------------------------|-----:|:-------------|------------------:|:---------|-------:|:--------|---------:|:-------------------|:----------|:-----------------|-----:|-------------:|------:|----------:|-----------:|--------------:|
+|BMW_520d_Touring_Aut._Navi_Prof.__Panorama__Head_Up            |  8000|station wagon |               2012|automatic |     184|5        |     50000|diesel              |bmw        |no                |     5|          2010| 2013.5|       9.20|       91500|         -41500|
+|Skoda_Roomster_Active_Plus_1.2                                 |  8500|station wagon |               2013|manual    |      70|roomster |     30000|petrol              |skoda      |no                |     5|          2006| 2011.5|       9.20|       65000|         -35000|
+|Opel_Astra_1.6_Sports_Tourer_150_Jahre_Opel                    |  9690|station wagon |               2012|manual    |     116|astra    |     60000|petrol              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          -3000|
+|Renault_Clio_Grandtour_1.2_16V_75_Dynamique                    |  9790|station wagon |               2014|manual    |      73|clio     |     30000|petrol              |renault    |no                |     5|          2012| 2014.5|       8.05|       32500|          -2500|
+|Renault_Clio_Grandtour_1.2_16V_75_Dynamique                    |  9790|station wagon |               2014|manual    |      73|clio     |     30000|petrol              |renault    |no                |     5|          2012| 2014.5|       8.05|       32500|          -2500|
+|Renault_Clio_Grandtour_1.2_16V_75_Dynamique_TOP!               |  9790|station wagon |               2014|manual    |      73|clio     |     30000|petrol              |renault    |no                |     5|          2012| 2014.5|       8.05|       32500|          -2500|
+|Seat_Ibiza_ST_1.4_16V_Reference_Salsa                          |  8790|station wagon |               2014|manual    |      86|ibiza    |     40000|petrol              |seat       |no                |     5|          2008| 2012.5|       6.60|       39000|           1000|
+|Seat_Ibiza_ST_1.2_12V_Reference_4you                           |  9000|station wagon |               2014|manual    |      75|ibiza    |     40000|petrol              |seat       |no                |     5|          2008| 2012.5|       6.60|       39000|           1000|
+|Opel_Astra_J_Sports_Tourer_1.7_CDTI_EcoFlex                    |  9200|station wagon |               2012|manual    |     136|astra    |     80000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          17000|
+|Opel_Astra_1.3_CDTI_DPF_ecoFLEX_Sports_TourerStar...           |  8300|station wagon |               2012|manual    |      95|astra    |     90000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          27000|
+|Renault_Clio_Grandtour_Energy_dCi_90_Start_&_Stop_Dy...        |  9900|station wagon |               2014|manual    |      90|clio     |     60000|diesel              |renault    |no                |     5|          2012| 2014.5|       8.05|       32500|          27500|
+|Mercedes_Benz_Citan_aus_1._Hand__Scheckheft_bei_Mercedes_Benz  |  8990|station wagon |               2013|manual    |      90|c        |    125000|diesel              |mercedes   |no                |     5|          2007| 2012.0|       7.20|       82000|          43000|
+|Mercedes_Benz_Citan_aus_1._Hand__Scheckheft_bei_Mercedes_Benz  |  8990|station wagon |               2013|manual    |      90|c        |    125000|diesel              |mercedes   |no                |     5|          2011| 2014.0|       7.20|       82000|          43000|
+|Audi_A6_Avant_3.0_TDI_DPF_XENON_KAMERAInzahlungnahme           |  7999|station wagon |               2012|manual    |     204|a6       |    150000|diesel              |audi       |no                |     5|          2011| 2014.0|       7.00|      100500|          49500|
+|Audi_A4_Avant_/_Seat_Exeo_2.0_TDI_DPF                          |  9500|station wagon |               2012|manual    |     120|a4       |    150000|diesel              |audi       |no                |     5|          2007| 2012.0|       7.40|       93500|          56500|
+|BMW_530d_Touring_Aut.                                          |  9500|station wagon |               2012|automatic |     258|5        |    150000|diesel              |bmw        |no                |     5|          2010| 2013.5|       9.20|       91500|          58500|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer                          |  9250|station wagon |               2012|manual    |     110|astra    |    125000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          62000|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_150_Jahre_Opel           |  8500|station wagon |               2012|manual    |     110|astra    |    125000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          62000|
+|Audi_A6_Avant_2.0_TDI_DPF_multitronic_NAVI_FV23                |  8050|station wagon |               2013|automatic |     177|a6       |    150000|diesel              |audi       |no                |     5|          2011| 2014.0|       4.20|       88000|          62000|
+|Opel_Astra_LPG_Turbo_Sports_Tourer_150_Jahre_Edition           |  9990|station wagon |               2012|manual    |     140|astra    |    125000|liquefied petroleum |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          62000|
+|Opel_Astra_LPG_Turbo_Sports_Tourer_150_Jahre_Edition           |  9990|station wagon |               2012|manual    |     140|astra    |    125000|liquefied petroleum |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          62000|
+|Opel_Astra_2.0_CDTI_DPF_Sports_Tourer_Innovation               |  5300|station wagon |               2012|manual    |     121|astra    |    125000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          62000|
+|BMW_316d_DPF_Touring                                           |  9800|station wagon |               2012|manual    |     116|3        |    150000|diesel              |bmw        |no                |     5|          2005| 2008.5|       9.65|       86000|          64000|
+|Volkswagen_3BG                                                 |  2500|station wagon |               2014|manual    |     101|passat   |    150000|diesel              |volkswagen |no                |     5|          2010| 2013.5|       7.90|       84000|          66000|
+|FORD_GRAND_C_MAX_TITANIUM_2.0TDCI_AHK_TOP                      |  9800|station wagon |               2012|automatic |     140|c-max    |    150000|diesel              |ford       |no                |     5|          2010| 2013.5|       8.75|       67500|          82500|
+|Opel_Astra_Sports_Tourer_1_7_D_mit_Navigation                  |  7800|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Navi_Leder_Alu           |  6800|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_"1._HAND"                |  6800|station wagon |               2012|manual    |     131|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
+|Verkaufe__Opel_Astra_Diesel_Sportstouer___Top_Zustand          |  9900|station wagon |               2012|manual    |     165|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Edition_gute_Ausstattung |  7250|station wagon |               2012|manual    |     125|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer_Design_Edition           |  8499|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
+|Opel_Astra_1.7_CDTI_DPF_Sports_Tourer                          |  9650|station wagon |               2012|manual    |     110|astra    |    150000|diesel              |opel       |no                |     5|          2009| 2012.0|       8.90|       63000|          87000|
 ```
 
 This gives us much more information than if we had just searched for station wagons with no unrepaired damages between 500 EUR and 10 000 EUR. We can see that there are no large differences in fault rates, but there are rather large differences between the average mileage and the mileage from the ads. The car at the top of the search results seem like a very interesting car, as it has driven only about half as much as the average car of that brand, model and production year.
@@ -1051,4 +1084,3 @@ There are also a lot of possibilities in expanding on the regressions. One might
 If you were looking at a an older car (12 years old +), the newest reliability report doesn't have data for that car. But what if one could look into predictions of what the current fault rate is, even though this is not available. What if the last fault rate of a car you were interested in was recorded in 2010, and you wanted some estimation on what the fault rate might be today? That could be interesting to look into.
 
 In the car data, I have primarily looked at car brands and models. But there are sometimes a plethora of different cars within the same model. Perhaps one could use the headlines from the ads to mine out some more information about the cars, which could then be used to classify them at a more granular level. This could potentially save some of the data that was shaved off when the lowest common denominator for the three data sets were determined.
-
