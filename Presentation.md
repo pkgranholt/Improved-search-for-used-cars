@@ -4,7 +4,7 @@ The idea for this capstone project came from a situation I had a few years ago w
 
 In order to do this, three data sets need to be stitched together. The data sets contain used car listings, crash test data and reliability data. Each present its own challenge in the wrangling process, and they need to be made uniform for the data sets to compare car models to car models.
 
-For this project, we will imagine that the project is done for a web site that has listings for used cars.
+For this project, we will imagine that the client provides a web site that has listings for used cars.
 
 A big thanks to my advisor for this project, Branko Kovac!
 
