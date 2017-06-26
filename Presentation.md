@@ -4,6 +4,8 @@ The idea for this capstone project came from a situation I had a few years ago w
 
 In order to do this, three data sets need to be stitched together. The data sets contain used car listings, crash test data and reliability data. Each present its own challenge in the wrangling process, and they need to be made uniform for the data sets to compare car models to car models.
 
+For this project, we will imagine that the project is done for a web site that has listings for used cars.
+
 A big thanks to my advisor for this project, Branko Kovac!
 
 ## The data sets and wrangling
@@ -1086,3 +1088,9 @@ There are several possibilities for expanding on the regressions. One might wond
 If you were looking at a an older car (12 years old +), the newest reliability report doesn't have data for that car. But what if one could look into predictions of what the current fault rate is, even though this is not available. What if the last fault rate of a car you were interested in was recorded in 2010, and you wanted some estimation on what the fault rate might be today? That could be interesting to look into.
 
 In the car data, I have primarily looked at car brands and models. But there are sometimes a plethora of different cars within the same model. Perhaps one could use the headlines from the ads to mine out some more information about the cars, which could then be used to classify them at a more granular level. This could potentially save some of the data that was shaved off when the lowest common denominator for the three data sets were determined.
+
+# Recommendation
+
+My recommendation to the client is to establish a partnership with data providers for crash data and reliability data for the cars that are advertised on their web site. EURONCAP is the natural choice for crash test ratings, but there are several potential partners for reliability data.
+
+In the future, the client should also consider if there is other kinds of data, like driving emissions or productions emissions, that users want and that can be attached in the same way we have seen here for crash and reliability data.
